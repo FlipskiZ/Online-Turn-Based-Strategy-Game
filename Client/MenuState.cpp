@@ -75,69 +75,37 @@ void MenuState::update(Engine* engine){
                 addButtonToList(newButton);
             }
         }else if(menuId == 1){
-            if(!lanMode){
-                float x = 0, y = 0, width = 0, height = 0;
-                int buttonId = 4;
+            float x = 0, y = 0, width = 0, height = 0;
+            int buttonId = 4;
 
-                width = 256, height = 64;
+            width = 256, height = 64;
 
-                x = screenWidth/2-width/2, y = screenHeight/2-height/2+height;
+            x = screenWidth/2-width/2, y = screenHeight/2-height/2+height;
 
-                Button *newButton = new Button();
-                newButton->setPos(x, y);
-                newButton->setDimensions(width, height);
-                newButton->setTypeId(buttonId);
+            Button *newButton = new Button();
+            newButton->setPos(x, y);
+            newButton->setDimensions(width, height);
+            newButton->setTypeId(buttonId);
 
-                addButtonToList(newButton);
+            addButtonToList(newButton);
 
-                x = 0, y = 0, width = 0, height = 0;
-                int inputFieldId = 0;
+            x = 0, y = 0, width = 0, height = 0;
+            int inputFieldId = 0;
 
-                width = 512, height = 32;
+            width = 512, height = 32;
 
-                x = screenWidth/2-width/2, y = screenHeight/2-height/4;
+            x = screenWidth/2-width/2, y = screenHeight/2-height/4;
 
-                InputField *newField = new InputField();
-                newField->setPos(x, y);
-                newField->setDimensions(width, height);
-                newField->setTypeId(inputFieldId);
-                newField->setSelected(true);
+            InputField *newField = new InputField();
+            newField->setPos(x, y);
+            newField->setDimensions(width, height);
+            newField->setTypeId(inputFieldId);
+            newField->setSelected(true);
 
-                addInputFieldToList(newField);
-            }else{
-                float x = 0, y = 0, width = 0, height = 0;
-                int buttonId = 5;
-
-                width = 256, height = 64;
-
-                x = screenWidth/2-width/2, y = screenHeight/2-height/2+height;
-
-                Button *newButton = new Button();
-                newButton->setPos(x, y);
-                newButton->setDimensions(width, height);
-                newButton->setTypeId(buttonId);
-
-                addButtonToList(newButton);
-
-                x = 0, y = 0, width = 0, height = 0;
-                int inputFieldId = 1;
-
-                width = 512, height = 32;
-
-                x = screenWidth/2-width/2, y = screenHeight/2-height/4;
-
-                InputField *newField = new InputField();
-                newField->setPos(x, y);
-                newField->setDimensions(width, height);
-                newField->setTypeId(inputFieldId);
-                newField->setSelected(true);
-
-                addInputFieldToList(newField);
-            }
-
+            addInputFieldToList(newField);
         }else if(menuId == 2){
             float x = 0, y = 0, width = 0, height = 0;
-            int buttonId = 5;
+            int buttonId = 4;
 
             width = 256, height = 64;
 
@@ -154,6 +122,35 @@ void MenuState::update(Engine* engine){
             int inputFieldId = 1;
 
             width = 512, height = 32;
+
+            x = screenWidth/2-width/2, y = screenHeight/2-height/4;
+
+            InputField *newField = new InputField();
+            newField->setPos(x, y);
+            newField->setDimensions(width, height);
+            newField->setTypeId(inputFieldId);
+            newField->setSelected(true);
+
+            addInputFieldToList(newField);
+        }else if(menuId == 3){
+            float x = 0, y = 0, width = 0, height = 0;
+            int buttonId = 5;
+
+            width = 256, height = 64;
+
+            x = screenWidth/2-width/2, y = screenHeight/2-height/2+height;
+
+            Button *newButton = new Button();
+            newButton->setPos(x, y);
+            newButton->setDimensions(width, height);
+            newButton->setTypeId(buttonId);
+
+            addButtonToList(newButton);
+
+            x = 0, y = 0, width = 0, height = 0;
+            int inputFieldId = 2;
+
+            width = 256, height = 32;
 
             x = screenWidth/2-width/2, y = screenHeight/2-height/4;
 
@@ -200,13 +197,13 @@ void MenuState::update(Engine* engine){
                         }
                     }
                 }else{
+                    menuId = 3;
                     for(int i = 0; i < MAX_INPUT_FIELDS; i++){
                         if(inputFieldList[i] != NULL){
                             if(inputFieldList[i]->getTypeId() == 1){
                                 std::string tempPort = inputFieldList[i]->getInput();
                                 if(std::all_of(tempPort.begin(), tempPort.end(), ::isdigit) && tempPort.size() > 0){
                                     rakPort = atoi(inputFieldList[i]->getInput().c_str());
-                                    engine->changeState(PlayState::instance());
                                 }else{
                                     menuId = 1;
                                     inputFieldList[i]->clearInput();
@@ -216,15 +213,29 @@ void MenuState::update(Engine* engine){
                     }
                 }
             }else if(menuId == 2){
+                menuId = 3;
                 for(int i = 0; i < MAX_INPUT_FIELDS; i++){
                     if(inputFieldList[i] != NULL){
                         if(inputFieldList[i]->getTypeId() == 1){
                             std::string tempPort = inputFieldList[i]->getInput();
                             if(std::all_of(tempPort.begin(), tempPort.end(), ::isdigit) && tempPort.size() > 0){
                                 rakPort = atoi(inputFieldList[i]->getInput().c_str());
+                            }else{
+                                menuId = 2;
+                                inputFieldList[i]->clearInput();
+                            }
+                        }
+                    }
+                }
+            }else if(menuId == 3){
+                for(int i = 0; i < MAX_INPUT_FIELDS; i++){
+                    if(inputFieldList[i] != NULL){
+                        if(inputFieldList[i]->getTypeId() == 2){
+                            std::string tempPort = inputFieldList[i]->getInput();
+                            if(inputFieldList[i]->getInput().size() > 0){
+                                rakClientName = inputFieldList[i]->getInput();
                                 engine->changeState(PlayState::instance());
                             }else{
-                                menuId = 1;
                                 inputFieldList[i]->clearInput();
                             }
                         }
@@ -277,15 +288,49 @@ void MenuState::update(Engine* engine){
 
                     case 4:
                         ///Next menuId
-                        menuId = 2;
-                        for(int i = 0; i < MAX_INPUT_FIELDS; i++){
-                            if(inputFieldList[i] != NULL){
-                                if(inputFieldList[i]->getTypeId() == 0){
-                                    if(inputFieldList[i]->getInput().size() > 0){
-                                        rakIpAdress = inputFieldList[i]->getInput();
-                                    }else{
-                                        menuId = 1;
-                                        inputFieldList[i]->clearInput();
+                        if(!lanMode){
+                            if(menuId == 1){
+                                menuId = 2;
+                                for(int i = 0; i < MAX_INPUT_FIELDS; i++){
+                                    if(inputFieldList[i] != NULL){
+                                        if(inputFieldList[i]->getTypeId() == 0){
+                                            if(inputFieldList[i]->getInput().size() > 0){
+                                                rakIpAdress = inputFieldList[i]->getInput();
+                                            }else{
+                                                menuId = 1;
+                                                inputFieldList[i]->clearInput();
+                                            }
+                                        }
+                                    }
+                                }
+                            }else if(menuId == 2){
+                                menuId = 3;
+                                for(int i = 0; i < MAX_INPUT_FIELDS; i++){
+                                    if(inputFieldList[i] != NULL){
+                                        if(inputFieldList[i]->getTypeId() == 1){
+                                            std::string tempPort = inputFieldList[i]->getInput();
+                                            if(std::all_of(tempPort.begin(), tempPort.end(), ::isdigit) && tempPort.size() > 0){
+                                                rakPort = atoi(inputFieldList[i]->getInput().c_str());
+                                            }else{
+                                                menuId = 2;
+                                                inputFieldList[i]->clearInput();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }else{
+                            menuId = 3;
+                            for(int i = 0; i < MAX_INPUT_FIELDS; i++){
+                                if(inputFieldList[i] != NULL){
+                                    if(inputFieldList[i]->getTypeId() == 1){
+                                        std::string tempPort = inputFieldList[i]->getInput();
+                                        if(std::all_of(tempPort.begin(), tempPort.end(), ::isdigit) && tempPort.size() > 0){
+                                            rakPort = atoi(inputFieldList[i]->getInput().c_str());
+                                        }else{
+                                            menuId = 1;
+                                            inputFieldList[i]->clearInput();
+                                        }
                                     }
                                 }
                             }
@@ -295,39 +340,20 @@ void MenuState::update(Engine* engine){
 
                     case 5:
                         ///Join server
-                        {
-                            if(!lanMode){
-                                for(int i = 0; i < MAX_INPUT_FIELDS; i++){
-                                    if(inputFieldList[i] != NULL){
-                                        if(inputFieldList[i]->getTypeId() == 1){
-                                            std::string tempPort = inputFieldList[i]->getInput();
-                                            if(std::all_of(tempPort.begin(), tempPort.end(), ::isdigit) && tempPort.size() > 0){
-                                                rakPort = atoi(tempPort.c_str());
-                                                menuId = 0;
-                                                engine->changeState(PlayState::instance());
-                                            }else{
-                                                inputFieldList[i]->clearInput();
-                                            }
-                                        }
-                                    }
-                                }
-                            }else{
-                                for(int i = 0; i < MAX_INPUT_FIELDS; i++){
-                                    if(inputFieldList[i] != NULL){
-                                        if(inputFieldList[i]->getTypeId() == 1){
-                                            std::string tempPort = inputFieldList[i]->getInput();
-                                            if(std::all_of(tempPort.begin(), tempPort.end(), ::isdigit) && tempPort.size() > 0){
-                                                rakPort = atoi(inputFieldList[i]->getInput().c_str());
-                                                engine->changeState(PlayState::instance());
-                                            }else{
-                                                menuId = 1;
-                                                inputFieldList[i]->clearInput();
-                                            }
-                                        }
+                        for(int i = 0; i < MAX_INPUT_FIELDS; i++){
+                            if(inputFieldList[i] != NULL){
+                                if(inputFieldList[i]->getTypeId() == 2){
+                                    if(inputFieldList[i]->getInput().size() > 0){
+                                        rakClientName = inputFieldList[i]->getInput();
+                                        engine->changeState(PlayState::instance());
+                                    }else{
+                                        menuId = 3;
+                                        inputFieldList[i]->clearInput();
                                     }
                                 }
                             }
                         }
+
                         break;
                 }
             }
@@ -349,7 +375,7 @@ void MenuState::update(Engine* engine){
 void MenuState::draw(Engine* engine){
 
     if(menuId != 0)
-        al_draw_text(defaultFont, al_map_rgb(150, 150, 150), screenWidth/2, screenHeight/2-32, ALLEGRO_ALIGN_CENTRE, (menuId == 1) ? ((lanMode) ? "Please write in the port of the LAN server" : "Please write in the IP adress of the server") : "Please write in which port to use, default is 2020");
+        al_draw_text(defaultFont, al_map_rgb(150, 150, 150), screenWidth/2, screenHeight/2-32, ALLEGRO_ALIGN_CENTRE, (menuId == 1) ? ((lanMode) ? "Please write in the port of the LAN server" : "Please write in the IP adress of the server") : (menuId == 2 && !lanMode) ? "Please write in which port to use, default is 2020" : "Please write in your in-game name");
 
     for(int i = 0; i < MAX_BUTTONS; i++){
         if(buttonList[i] != NULL){

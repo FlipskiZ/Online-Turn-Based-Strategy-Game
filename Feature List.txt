@@ -1,0 +1,47 @@
+Able to choose a pre-defined civilization or create a new custom one
+-8 pre-defined civilizations
+-Make a custom one by selecting 2 global bonuses, 1 to your capital and 1 special building.
+
+Resources to mine and harvest
+-Food - For keeping your population alive
+-Oil - For energy and plastic production
+-Silver - For building electrical components required in buildings and products
+-Metal - For building buildings
+
+2nd grade resources
+-Energy - Used for producing products, firing weapons, building buildings, upkeeping buildings, and basically everything else. Made from oil and renewable energy sources.
+-Plastic - For producing products and for building some buildings in the early-late game. Made from oil and energy.
+-Electrical components - For producing products and for building a few buildings in the mid-late game. Made from oil, energy and plastic.
+-Population - Some buildings require to be manned, later in the game you can create automated buildings that require less to none people in order to operate. Also, they produce money.
+-Happiness - Required for increasing your population and prevent strikes. Will be less important the further in the game you get and the more automated buildings you create.
+-Money - Can be used to quicken some production of buildings or to be used in trading. Gold can also be used to buy resources from a market building you can build, the prices will go up or down depending on how much you sell or buy there. Think Age of Empires
+
+The ability to place and upgrade buildings for harvesting and attacking purposes
+-Manufacture facilities for producing energy, plastics and electrical components.
+-Living chambers for a higher population max.
+-Food production buildings such as farms in order to generate food to keep your population alive.
+-Happiness buildings that generate products from plastic and electrical components to increase the happiness of your population.
+-Recycling facilities in order to recycle used plastic and electrical components to produce less pollution and get some resources back
+-Buildings that create missiles that can be used in war to destroy buildings. But they are much more expensive and require more time to be made than laser buildings.
+
+Technology to research in order to unlock new buildings and resources
+-Relatively self-explanatory. Research new improved buildings, upgrades, weapons etc.
+-Research new way of acquiring resources, from less accessible areas. Like deeper in the ground or in the ocean etc.
+-Research the possibility to create troops by creating anti-radiation armor. Troops will only be able to stay outside of your base for a few turns, before they die to radiation poisoning. How long they can stay outside of buildings depends on the armor.
+-Research robot troops, basically human troops but won't get radiation poisoning and doesn't use up your population.
+-Research automated buildings, to make buildings able to operate when you have a population shortage or people are on strike. Earlier automated technologies work with a lesser efficiency than if they were manned.
+
+Trading with other players.
+-There will be possibility to trade with other players and creating truces and alliances, but there will be zero limitations. The limitations are up to the other players. There is no need for limitations as there is no AI.
+-If you have a truce or an alliance, but break it by declaring war or by some other means. alarm the other players that this you broke your truce and cancel any truces you have with other players so they can declare war on you without consequences.
+-When in the trading menu show the about correct worth of all the elements you have put in the trading menu, to be easier to judge if it's worth it. Or alternatively simply not do it and make players judge the price themselves. Probably just make the players judge, it will be easier and more dynamic.
+
+War
+-You can fire your stored missiles on general areas in the enemy territory in order to damage and/or destroy buildings.
+-Use weaponized buildings that can fire at specific enemy areas/buildings at a more accurate but shorter range.
+-You require to have missile weapon buildings in order to fire the missiles you produce and store up, but they are much stronger than their laser counterpart.
+-Laser weapons require more energy to fire than to produce missiles, but they use no resources and require less time to fire.
+
+Win-Conditions
+-Be last man standing. The most obvious victory.
+-Some other victories, technology probably.

@@ -7,18 +7,16 @@ class Player{
         void update();
 
         void setPlayerId(int id);
-        void setPlayerAddress(RakNet::SystemAddress playerAddress);
+        void setPlayerGuid(RakNet::RakNetGUID playerGuid);
         void setPlayerName(const char* playerName);
 
         int getStats(int id);
         std::string getPlayerName();
-        RakNet::SystemAddress getPlayerAddress();
+        RakNet::RakNetGUID playerGuid;
     protected:
     private:
         int playerId;
         std::string playerName;
-
-        RakNet::SystemAddress playerAddress;
 };
 
 #endif // PLAYER_H

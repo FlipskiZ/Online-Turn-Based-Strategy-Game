@@ -60,7 +60,7 @@ float fpsTimeNew, fpsCounter, fpsTimeOld;
 float cameraPosX, cameraPosY, cameraOffsetX, cameraOffsetY, mapDisplayOffsetX, mapDisplayOffsetY, cameraMoveSpeed;
 bool drawScreen, timerEvent, done, mouseButtonLeft, mouseButtonLeftClick, mouseButtonRight, mouseButtonRightClick, inGame, allegroWrite;
 float mouseX, mouseY, volumeLevel;
-int lastKeyPress, mouseWheel = 0;
+int lastKeyPress, mouseWheel = 0, mouseWheelChange;
 
 int mapArrayWidth, mapArrayHeight;
 
@@ -73,6 +73,8 @@ int rakPort;
 bool lanMode;
 RakNet::SystemAddress serverAddress;
 std::string rakIpAdress, rakClientName, serverIdSearch;
+
+std::string chatLog[chatLogSize];
 
 TILE_TYPE tileIndex[] = {
 	{true}, // (0) TILE_GROUND1
@@ -108,6 +110,8 @@ int main(){
 
     double accumulator = 0.0;
 
+    int mouseWheelChangeHelper = 0;
+
 	//Main Loop
     while(engine.running()){
         ALLEGRO_EVENT events;
@@ -121,7 +125,7 @@ int main(){
 
         if(events.type == ALLEGRO_EVENT_KEY_CHAR && allegroWrite){
             int unichar = events.keyboard.unichar;
-            if(events.keyboard.keycode != ALLEGRO_KEY_BACKSPACE && events.keyboard.keycode != ALLEGRO_KEY_ENTER){
+            if(events.keyboard.keycode != ALLEGRO_KEY_BACKSPACE && events.keyboard.keycode != ALLEGRO_KEY_ENTER && events.keyboard.keycode < 90){
                 allegroString.push_back(unichar);
             }else if(events.keyboard.keycode == ALLEGRO_KEY_BACKSPACE && allegroString.size() > 0){
                 allegroString.erase(allegroString.size()-1, 1);
@@ -140,7 +144,9 @@ int main(){
             //Update Mouse Variables +
             mouseX = al_get_mouse_state_axis(&mouseState,0);
             mouseY = al_get_mouse_state_axis(&mouseState,1);
+            mouseWheelChangeHelper = mouseWheel;
             mouseWheel = al_get_mouse_state_axis(&mouseState, 2);
+            mouseWheelChange = mouseWheel-mouseWheelChangeHelper;
 
             if(al_mouse_button_down(&mouseState, 1)){
                 mouseButtonLeft = true;

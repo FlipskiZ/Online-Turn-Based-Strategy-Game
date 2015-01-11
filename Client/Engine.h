@@ -34,7 +34,7 @@
 #define screenHeight 720
 
 #define mapDisplayWidth 1280
-#define mapDisplayHeight 640
+#define mapDisplayHeight 608
 
 #define maxMapArrayWidth 400
 #define maxMapArrayHeight 200
@@ -48,13 +48,14 @@
 
 #define FPS 60.0
 
+#define chatLogSize 20
+
 enum GameMessages{
     ID_CONNECTED_MESSAGE = ID_USER_PACKET_ENUM+1,
     ID_PLAYER_INITIALIZATION = ID_USER_PACKET_ENUM+2,
 	ID_CHAT_MESSAGE = ID_USER_PACKET_ENUM+3,
 	ID_TRANSFER_MAP_TILE = ID_USER_PACKET_ENUM+4,
 	ID_MAP_DIMENSIONS = ID_USER_PACKET_ENUM+5,
-	ID_PAINT_TILE = ID_USER_PACKET_ENUM+6
 };
 
 bool isPassable(float x, float y, float width, float height);
@@ -107,7 +108,7 @@ extern float fpsTimeNew, fpsCounter, fpsTimeOld;
 extern float cameraPosX, cameraPosY, cameraOffsetX, cameraOffsetY, mapDisplayOffsetX, mapDisplayOffsetY, cameraMoveSpeed;
 extern bool drawScreen, timerEvent, done, mouseButtonLeft, mouseButtonLeftClick, mouseButtonRight, mouseButtonRightClick, inGame, allegroWrite;
 extern float mouseX, mouseY;
-extern int lastKeyPress, mouseWheel;
+extern int lastKeyPress, mouseWheel, mouseWheelChange;
 
 extern std::string allegroString;
 
@@ -120,6 +121,8 @@ extern int rakPort;
 extern bool lanMode;
 extern RakNet::SystemAddress serverAddress;
 extern std::string rakIpAdress, rakClientName, serverIdSearch;
+
+extern std::string chatLog[chatLogSize];
 
 class GameState;
 

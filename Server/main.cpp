@@ -23,7 +23,7 @@ RakNet::SocketDescriptor rakSocketDescriptor;
 
 Engine engine;
 
-int mapArray[maxMapArrayWidth][maxMapArrayHeight];
+int mapArray[maxMapArrayWidth][maxMapArrayHeight]; ///Multi-dimensional mapArray[x][y]
 int mapArrayRotation[maxMapArrayWidth][maxMapArrayHeight];
 
 const char* versionNumber;
@@ -120,6 +120,7 @@ void enterCommand(std::string command){
     printf("Entered command: %s\n", command.c_str());
     if(command.compare("shutdown") || command.compare("exit")){
         rakPeer->Shutdown(300);
+        engine.quit();
     }
 }
 

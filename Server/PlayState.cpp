@@ -66,7 +66,8 @@ void PlayState::update(Engine* engine){
 
                     Player *newPlayer = new Player();
                     newPlayer->setPlayerName(rakString.C_String());
-                    newPlayer->setPlayerAddress(rakPacket->systemAddress);
+                    newPlayer->setPlayerGuid(rakPacket->guid);
+                    addPlayerToList(newPlayer);
 
                     RakNet::BitStream bitStreamOUT;
                     bitStreamOUT.Write((RakNet::MessageID)ID_CONNECTED_MESSAGE);
@@ -111,43 +112,23 @@ void PlayState::update(Engine* engine){
                 break;
 
             case ID_CHAT_MESSAGE:{
-                    RakNet::RakString name;
                     RakNet::RakString message;
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
-                    bitStreamIN.Read(name);
                     bitStreamIN.Read(message);
-                    printf("%s: %s\n", name.C_String(), message.C_String());
 
                     RakNet::BitStream bitStreamOUT;
                     bitStreamOUT.Write((RakNet::MessageID)ID_CHAT_MESSAGE);
-                    bitStreamOUT.Write(name.C_String());
+                        for(int i = 0; i < maxPlayers; i++){
+                            if(playerList[i] != NULL && strcmp(playerList[i]->playerGuid.ToString(), rakPacket->guid.ToString()) == 0){
+                                bitStreamOUT.Write(playerList[i]->getPlayerName().c_str());
+                                printf("%s: %s\n", playerList[i]->getPlayerName().c_str(), message.C_String());
+                            }
+                        }
                     bitStreamOUT.Write(message.C_String());
                     rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
                 }
                 break;
-
-            case ID_PAINT_TILE:{
-                int x, y, coloredTile;
-
-                RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
-                bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
-                bitStreamIN.Read(x);
-                bitStreamIN.Read(y);
-                bitStreamIN.Read(coloredTile);
-                if(insideMap(x, y, 0, 0)){
-                    if((mapArray[x][y] == 0 || mapArray[x][y] == 1 || mapArray[x][y] == 8 || mapArray[x][y] == 9 || (mapArray[x][y] > 10 && mapArray[x][y] < 15)) && coloredTile > 10 && coloredTile < 15){
-                        mapArray[x][y] = coloredTile;
-
-                        RakNet::BitStream bitStreamOUT;
-                        bitStreamOUT.Write((RakNet::MessageID)ID_TRANSFER_MAP_TILE);
-                        bitStreamOUT.Write(x);
-                        bitStreamOUT.Write(y);
-                        bitStreamOUT.Write(coloredTile);
-                        rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
-                    }
-                }
-            }
             break;
 
             default:

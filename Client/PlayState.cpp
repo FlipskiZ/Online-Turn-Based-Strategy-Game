@@ -6,6 +6,21 @@
 PlayState PlayState::m_PlayState;
 
 void PlayState::init(){
+    //Create buttons & chat
+    int x = 0, y = 0, width = 0, height = 0;
+    int inputFieldId = 3;
+
+    width = 512, height = 24;
+
+    x = 0, y = screenHeight-height;
+
+    InputField *newField = new InputField();
+    newField->setPos(x, y);
+    newField->setDimensions(width, height);
+    newField->setTypeId(inputFieldId);
+    newField->setSelected(false);
+
+    addInputFieldToList(newField);
 
     //Create Player
     playerList[0] = NULL;
@@ -18,6 +33,10 @@ void PlayState::init(){
         particleList[i] = NULL;
     }
     //Pointer Lists -
+    for(int i = 0; i < chatLogSize; i++){
+        chatLog[i].clear();
+    }
+
     if(lanMode){
         RakNet::SocketDescriptor socketDescriptorTemp(rakPort+1, 0);
         rakSocketDescriptor = socketDescriptorTemp;
@@ -33,6 +52,10 @@ void PlayState::init(){
 }
 
 void PlayState::cleanup(){
+    for(int i = 0; i < MAX_BUTTONS; i++)
+        buttonList[i] = NULL;
+    for(int i = 0; i < MAX_INPUT_FIELDS; i++)
+        inputFieldList[i] = NULL;
 }
 
 void PlayState::pause(){
@@ -53,7 +76,6 @@ void PlayState::update(Engine* engine){
                 case ID_UNCONNECTED_PONG:{
                         RakNet::BitStream bsIn(rakPacket->data, rakPacket->length, false);
                         bsIn.IgnoreBytes(1);
-                        bsIn.Read(time);
                         printf("Got pong");
                 }
 
@@ -103,15 +125,15 @@ void PlayState::update(Engine* engine){
                 break;
 
             case ID_PLAYER_INITIALIZATION:{
-                    int playerTile;
+                    //int playerTile;
 
                     RakNet::RakString rakString;
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
-                    bitStreamIN.Read(playerTile);
+                    //bitStreamIN.Read(playerTile);
 
                     playerList[0] = new Player();
-                    playerList[0]->setPlayerTile(playerTile);
+                    //playerList[0]->setPlayerTile(playerTile);
             }
 
             case ID_CHAT_MESSAGE:{
@@ -121,8 +143,14 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
                     bitStreamIN.Read(name);
                     bitStreamIN.Read(message);
-                    printf("%s: %s\n", name.C_String(), message.C_String());
-                }
+
+                    for(int i = 1; i < chatLogSize; i++){
+                        chatLog[i-1] = chatLog[i];
+                    }
+                    chatLog[chatLogSize-1].assign(name);
+                    chatLog[chatLogSize-1].append(": ");
+                    chatLog[chatLogSize-1].append(message);
+                    }
                 break;
 
             case ID_TRANSFER_MAP_TILE:{
@@ -164,7 +192,7 @@ void PlayState::update(Engine* engine){
         cameraPosX += cameraMoveSpeed;
     }
 
-    if(mouseButtonLeftClick){
+    /*if(mouseButtonLeftClick){
         int tX = floor(mouseX/tileSize), tY = floor(mouseY/tileSize);
         if(insideMap(tX, tY, 0, 0)){
             RakNet::BitStream bitStreamOUT;
@@ -174,7 +202,7 @@ void PlayState::update(Engine* engine){
             bitStreamOUT.Write(playerList[0]->getStats(1));
             rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
         }
-    }
+    }*/
 
     /*if(vertical != 0 && horizontal != 0){
         playerList[0]->deltaX /= sqrt(2);
@@ -191,6 +219,21 @@ void PlayState::update(Engine* engine){
             engine->pushState(MenuState::instance());
             lastKeyPress = ALLEGRO_KEY_ESCAPE;
         }
+    }else if(al_key_down(&keyState, ALLEGRO_KEY_ENTER)){
+        if(lastKeyPress != ALLEGRO_KEY_ENTER){
+            for(int i = 0; i < MAX_INPUT_FIELDS; i++){
+                if(inputFieldList[i] != NULL){
+                    if(inputFieldList[i]->getTypeId() == 3 && inputFieldList[i]->selected && inputFieldList[i]->getInput().size() > 0){
+                        RakNet::BitStream bitStreamOUT;
+                        bitStreamOUT.Write((RakNet::MessageID)ID_CHAT_MESSAGE);
+                        bitStreamOUT.Write(inputFieldList[i]->getInput().c_str());
+                        rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+                        inputFieldList[i]->clearInput();
+                    }
+                }
+            }
+            lastKeyPress = ALLEGRO_KEY_ENTER;
+        }
     }
     //Player Input -
 
@@ -203,6 +246,11 @@ void PlayState::update(Engine* engine){
     for(int i = 0; i < MAX_PLAYERS; i++){
         if(playerList[i] != NULL){
             playerList[i]->update();
+        }
+    }
+    for(int i = 0; i < MAX_INPUT_FIELDS; i++){
+        if(inputFieldList[i] != NULL){
+            inputFieldList[i]->update();
         }
     }
     /*for(int i = 0; i < MAX_BUTTONS; i++){
@@ -247,9 +295,20 @@ void PlayState::draw(Engine* engine){
     //Draw GUI +
     al_draw_filled_rectangle(0, mapDisplayHeight, screenWidth, screenHeight, al_map_rgb(0,0,0));
 
-    al_draw_textf(smallFont, al_map_rgb(150, 150, 150), screenWidth-60, screenHeight-23, NULL, "%s", versionNumber);
+    for(int i = 0; i < chatLogSize; i++){
+        if(screenHeight-40-15*i >= mapDisplayHeight){
+            al_draw_textf(smallFont, al_map_rgb(150, 150, 150), 0, screenHeight-(24+15)-15*i, 0, "%s", chatLog[chatLogSize-i-1].c_str());
+        }
+    }///Make this scrollable
+    for(int i = 0; i < MAX_INPUT_FIELDS; i++){
+        if(inputFieldList[i] != NULL){
+            inputFieldList[i]->draw();
+        }
+    }
+
+    al_draw_textf(smallFont, al_map_rgb(150, 150, 150), screenWidth-60, screenHeight-23, 0, "%s", versionNumber);
     fpsTimeNew = al_get_time();
     fpsCounter = 1/(fpsTimeNew - fpsTimeOld);
     fpsTimeOld = fpsTimeNew;
-    al_draw_textf(defaultFont, (fpsCounter > 55) ? al_map_rgb(50, 150, 50) : (fpsCounter <= 55 && fpsCounter > 30) ? al_map_rgb(150, 150, 50) : al_map_rgb(150, 50, 50), screenWidth-95, mapDisplayHeight, NULL, "FPS: %d", (int)round(fpsCounter));
+    al_draw_textf(defaultFont, (fpsCounter > 55) ? al_map_rgb(50, 150, 50) : (fpsCounter <= 55 && fpsCounter > 30) ? al_map_rgb(150, 150, 50) : al_map_rgb(150, 50, 50), screenWidth-95, mapDisplayHeight, 0, "FPS: %d", (int)round(fpsCounter));
 }

@@ -11,8 +11,8 @@ void Player::setPlayerId(int id){
     this->playerId = id;
 }
 
-void Player::setPlayerAddress(RakNet::SystemAddress playerAddress){
-    this->playerAddress = playerAddress;
+void Player::setPlayerGuid(RakNet::RakNetGUID playerGuid){
+    this->playerGuid = playerGuid;
 }
 
 void Player::setPlayerName(const char* playerName){
@@ -30,10 +30,6 @@ int Player::getStats(int id){
             break;
     }
     return 0;
-}
-
-RakNet::SystemAddress Player::getPlayerAddress(){
-    return this->playerAddress;
 }
 
 std::string Player::getPlayerName(){

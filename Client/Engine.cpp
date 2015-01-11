@@ -67,7 +67,7 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
     //Pointer Lists -
 
     //Variables +
-    versionNumber = "v1.0";
+    versionNumber = "v0.01";
 
     fpsTimeNew = 0, fpsCounter = 0, fpsTimeOld = 0;
 
