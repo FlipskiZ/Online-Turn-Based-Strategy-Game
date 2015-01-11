@@ -62,9 +62,6 @@ int main(){
 	//Load the Menu
 	engine.changeState(PlayState::instance());
 
-    mapArrayWidth = 40;
-    mapArrayHeight = 20;
-
     std::cout << "Which port to use? The default is 2020." << std::endl;
     std::cin >> port;
 

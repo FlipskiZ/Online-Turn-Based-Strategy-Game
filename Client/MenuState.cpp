@@ -215,22 +215,22 @@ void MenuState::update(Engine* engine){
                         }
                     }
                 }
-            }
             }else if(menuId == 2){
                 for(int i = 0; i < MAX_INPUT_FIELDS; i++){
                     if(inputFieldList[i] != NULL){
-                        if(inputFieldList[i]->getTypeId() == 2){
+                        if(inputFieldList[i]->getTypeId() == 1){
                             std::string tempPort = inputFieldList[i]->getInput();
                             if(std::all_of(tempPort.begin(), tempPort.end(), ::isdigit) && tempPort.size() > 0){
-                                rakPort = atoi(tempPort.c_str());
-                                menuId = 0;
+                                rakPort = atoi(inputFieldList[i]->getInput().c_str());
                                 engine->changeState(PlayState::instance());
                             }else{
+                                menuId = 1;
                                 inputFieldList[i]->clearInput();
                             }
                         }
                     }
                 }
+            }
             lastKeyPress = ALLEGRO_KEY_ENTER;
         }
      }

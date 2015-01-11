@@ -143,6 +143,7 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.Read(mapArrayWidth);
                     bitStreamIN.Read(mapArrayHeight);
             }
+            break;
 
             default:
                 printf("Message with identifier %i has arrived.\n", rakPacket->data[0]);

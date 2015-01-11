@@ -1,0 +1,47 @@
+# depslib dependency file v1.0
+1420943081 source:c:\mystuff\!programming\c++programming\codeblocks\projects\games\2d projects\online turn based strategy game\server\engine.cpp
+	"Engine.h"
+	"GameState.h"
+	"PlayState.h"
+
+1420907910 c:\mystuff\!programming\c++programming\codeblocks\projects\games\2d projects\online turn based strategy game\server\engine.h
+	<RakPeerInterface.h>
+	<MessageIdentifiers.h>
+	<BitStream.h>
+	<RakNetTypes.h>
+	<windows.h>
+	<string>
+	<math.h>
+	<stdlib.h>
+	<conio.h>
+	<time.h>
+	<stdio.h>
+	<vector>
+	<iostream>
+	<fstream>
+	<sstream>
+	"Player.h"
+
+1420908183 c:\mystuff\!programming\c++programming\codeblocks\projects\games\2d projects\online turn based strategy game\server\player.h
+
+1420667292 c:\mystuff\!programming\c++programming\codeblocks\projects\games\2d projects\online turn based strategy game\server\gamestate.h
+	"Engine.h"
+
+1420667125 c:\mystuff\!programming\c++programming\codeblocks\projects\games\2d projects\online turn based strategy game\server\playstate.h
+	"GameState.h"
+
+1420943081 source:c:\mystuff\!programming\c++programming\codeblocks\projects\games\2d projects\online turn based strategy game\server\main.cpp
+	"Engine.h"
+	"GameState.h"
+	"PlayState.h"
+
+1420908183 source:c:\mystuff\!programming\c++programming\codeblocks\projects\games\2d projects\online turn based strategy game\server\player.cpp
+	"Engine.h"
+	"GameState.h"
+	"PlayState.h"
+
+1420942720 source:c:\mystuff\!programming\c++programming\codeblocks\projects\games\2d projects\online turn based strategy game\server\playstate.cpp
+	"Engine.h"
+	"GameState.h"
+	"PlayState.h"
+

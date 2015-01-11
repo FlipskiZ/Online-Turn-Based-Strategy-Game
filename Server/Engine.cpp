@@ -14,6 +14,9 @@ void Engine::init(const char* title){
     port = 0, maxPlayers = 0;
     serverCommand.clear();
 
+    mapArrayWidth = 40;
+    mapArrayHeight = 20;
+
     loadMapArray();
 }
 
