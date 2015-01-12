@@ -23,6 +23,8 @@ class PlayState : public GameState{
 
     private:
         static PlayState m_PlayState;
+
+        int chatLogPos;
 };
 
 #endif // PLAYSTATE_H

@@ -48,7 +48,7 @@
 
 #define FPS 60.0
 
-#define chatLogSize 20
+#define chatLogSize 100
 
 enum GameMessages{
     ID_CONNECTED_MESSAGE = ID_USER_PACKET_ENUM+1,
