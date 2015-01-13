@@ -14,6 +14,7 @@ Resources to mine and harvest
 -Electrical components - For producing products and for building a few buildings in the mid-late game. Made from oil, energy and plastic.
 -Population - Some buildings require to be manned, later in the game you can create automated buildings that require less to none people in order to operate. Also, they produce money.
 -Happiness - Required for increasing your population and prevent strikes. Will be less important the further in the game you get and the more automated buildings you create.
+-Health - Similar to Happiness, but it is increased and decreased by different things. For example the more types of food you produce the more health your population gain.
 -Money - Can be used to quicken some production of buildings or to be used in trading. Gold can also be used to buy resources from a market building you can build, the prices will go up or down depending on how much you sell or buy there. Think Age of Empires
 
 The ability to place and upgrade buildings for harvesting and attacking purposes
