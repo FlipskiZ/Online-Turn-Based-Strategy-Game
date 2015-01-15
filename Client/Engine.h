@@ -34,7 +34,10 @@
 #define screenHeight 720
 
 #define mapDisplayWidth 1280
-#define mapDisplayHeight 608
+#define mapDisplayHeight 560
+
+#define topGuiHeight 32
+#define botGuiHeight 592//mapDisplayHeight+topGuiHeight
 
 #define maxMapArrayWidth 400
 #define maxMapArrayHeight 200
@@ -88,6 +91,10 @@ extern ALLEGRO_BITMAP *brokenFloorImage;
 extern ALLEGRO_BITMAP *bloodGroundImage1;
 extern ALLEGRO_BITMAP *bloodGroundImage2;
 extern ALLEGRO_BITMAP *vineWallImage;
+extern ALLEGRO_BITMAP *foodResourceImage;
+extern ALLEGRO_BITMAP *oilResourceImage;
+extern ALLEGRO_BITMAP *metalResourceImage;
+extern ALLEGRO_BITMAP *silverResourceImage;
 
 extern ALLEGRO_KEYBOARD_STATE keyState;
 extern ALLEGRO_MOUSE_STATE mouseState;

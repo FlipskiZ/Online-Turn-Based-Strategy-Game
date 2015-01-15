@@ -43,6 +43,7 @@ enum GameMessages{
 	ID_CHAT_MESSAGE = ID_USER_PACKET_ENUM+3,
 	ID_TRANSFER_MAP_TILE = ID_USER_PACKET_ENUM+4,
 	ID_MAP_DIMENSIONS = ID_USER_PACKET_ENUM+5,
+	ID_MINE_TILE = ID_USER_PACKET_ENUM+6
 };
 
 bool isPassable(float x, float y, float width, float height);

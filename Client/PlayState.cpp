@@ -238,10 +238,10 @@ void PlayState::update(Engine* engine){
     }
 
     if(mouseWheelChange != 0){
-        if(mouseX < 600 && mouseY > mapDisplayHeight){
+        if(mouseX < 600 && mouseY > botGuiHeight){
             chatLogPos += mouseWheelChange;
-            if(chatLogPos > chatLogSize-floor((screenHeight-45-mapDisplayHeight)/15)-1){
-                chatLogPos = chatLogSize-floor((screenHeight-45-mapDisplayHeight)/15)-1;
+            if(chatLogPos > chatLogSize-floor((screenHeight-45-botGuiHeight)/15)-1){
+                chatLogPos = chatLogSize-floor((screenHeight-45-botGuiHeight)/15)-1;
             }
             if(chatLogPos < 0){
                 chatLogPos = 0;
@@ -306,17 +306,17 @@ void PlayState::draw(Engine* engine){
     //Draw Entities -
 
     //Draw GUI +
-    al_draw_filled_rectangle(0, mapDisplayHeight, screenWidth, screenHeight, al_map_rgba(0,0,0,127));
+    al_draw_filled_rectangle(0, botGuiHeight, screenWidth, screenHeight, al_map_rgba(0,0,0,127));
 
     for(int i = chatLogPos; i < chatLogSize; i++){
-        if(screenHeight-40-15*(i-chatLogPos) >= mapDisplayHeight-5){
+        if(screenHeight-40-15*(i-chatLogPos) >= botGuiHeight-5){
             al_draw_textf(smallFont, al_map_rgb(150, 150, 150), 24, screenHeight-(24+15)-15*(i-chatLogPos), 0, "%s", chatLog[chatLogSize-i-1].c_str());
         }
     }
-    int temp = (screenHeight-30.5-mapDisplayHeight)/chatLogSize*floor((screenHeight-25.5-mapDisplayHeight)/15);///The height of the indicator in the scrollbar, which is resulted from the size in between the bottom and top of the whole scrollbar divided by how big the chatlog is times how many strings of the chatlog is drawed on screen.
-    float temp2 = (screenHeight-30.5-mapDisplayHeight)/chatLogSize;
+    int temp = (screenHeight-30.5-botGuiHeight)/chatLogSize*floor((screenHeight-25.5-botGuiHeight)/15);///The height of the indicator in the scrollbar, which is resulted from the size in between the bottom and top of the whole scrollbar divided by how big the chatlog is times how many strings of the chatlog is drawed on screen.
+    float temp2 = (screenHeight-30.5-botGuiHeight)/chatLogSize;
 
-    al_draw_rectangle(1, mapDisplayHeight+1, 23, screenHeight-24, al_map_rgb(215,215,215), 1);
+    al_draw_rectangle(1, botGuiHeight+1, 23, screenHeight-24, al_map_rgb(215,215,215), 1);
     al_draw_filled_rectangle(1, screenHeight-30-chatLogPos*temp2-temp, 23, screenHeight-25-chatLogPos*temp2, al_map_rgb(155,155,155));///Hard coded pixel values to work properly, not entirely sure why it doesn't work perfectly.
     for(int i = 0; i < MAX_INPUT_FIELDS; i++){
         if(inputFieldList[i] != NULL){
@@ -328,5 +328,5 @@ void PlayState::draw(Engine* engine){
     fpsTimeNew = al_get_time();
     fpsCounter = 1/(fpsTimeNew - fpsTimeOld);
     fpsTimeOld = fpsTimeNew;
-    al_draw_textf(defaultFont, (fpsCounter > 55) ? al_map_rgb(50, 150, 50) : (fpsCounter <= 55 && fpsCounter > 30) ? al_map_rgb(150, 150, 50) : al_map_rgb(150, 50, 50), screenWidth-95, mapDisplayHeight, 0, "FPS: %d", (int)round(fpsCounter));
+    al_draw_textf(defaultFont, (fpsCounter > 55) ? al_map_rgb(50, 150, 50) : (fpsCounter <= 55 && fpsCounter > 30) ? al_map_rgb(150, 150, 50) : al_map_rgb(150, 50, 50), screenWidth-95, botGuiHeight, 0, "FPS: %d", (int)round(fpsCounter));
 }

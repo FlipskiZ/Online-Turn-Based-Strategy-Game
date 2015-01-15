@@ -38,6 +38,10 @@ ALLEGRO_BITMAP *brokenFloorImage;
 ALLEGRO_BITMAP *bloodGroundImage1;
 ALLEGRO_BITMAP *bloodGroundImage2;
 ALLEGRO_BITMAP *vineWallImage;
+ALLEGRO_BITMAP *foodResourceImage;
+ALLEGRO_BITMAP *oilResourceImage;
+ALLEGRO_BITMAP *metalResourceImage;
+ALLEGRO_BITMAP *silverResourceImage;
 
 ALLEGRO_KEYBOARD_STATE keyState;
 ALLEGRO_MOUSE_STATE mouseState;
@@ -292,27 +296,20 @@ void loadMapArray(){
 }
 
 void saveMapArray(){
-    std::ofstream mapArrayFile;
-    mapArrayFile.open("config/MapArray.txt");
-
     for(int y = 0; y < mapArrayHeight; y++){
         for(int x = 0; x <= mapArrayWidth; x++){
-            if(x < mapArrayWidth){
-                mapArrayFile << mapArray[x][y] << " ";
-            }else if(x == mapArrayWidth){
-                mapArrayFile << std::endl;
-            }
+            mapArray[x][y] = rand()%3;
+            mapArrayRotation[x][y] = rand()%3;
         }
     }
-
-    mapArrayFile.close();
 }
 
 void drawMap(){
-    for(int x = 0; x < mapDisplayWidth/tileSize+1; x++){
-        for(int y = 0; y < mapDisplayHeight/tileSize+1; y++){
+    for(int x = 0; x < screenWidth/tileSize+1; x++){
+        for(int y = 0; y < screenHeight/tileSize+1; y++){
             int mapOffsetX = cameraPosX/tileSize, mapOffsetY = cameraPosY/tileSize;
-            drawTile(x+mapDisplayOffsetX/tileSize, y+mapDisplayOffsetY/tileSize, mapArray[x+mapOffsetX][y+mapOffsetY]);
+            if(y+mapOffsetY >= 0 && y+mapOffsetY < mapArrayHeight)
+                drawTile(x+mapDisplayOffsetX/tileSize, y+mapDisplayOffsetY/tileSize, mapArray[x+mapOffsetX][y+mapOffsetY]);
         }
     }
 }
@@ -356,19 +353,23 @@ void drawTile(float x, float y, int tileId){
             break;
 
         case 11:
-            al_draw_filled_rectangle(x*tileSize, y*tileSize, x*tileSize+tileSize, y*tileSize+tileSize, al_map_rgb(255, 0, 0));
+            al_draw_rotated_bitmap(groundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
+            al_draw_bitmap(foodResourceImage, x*tileSize, y*tileSize, NULL);
             break;
 
         case 12:
-            al_draw_filled_rectangle(x*tileSize, y*tileSize, x*tileSize+tileSize, y*tileSize+tileSize, al_map_rgb(0, 255, 0));
+            al_draw_rotated_bitmap(groundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
+            al_draw_bitmap(oilResourceImage, x*tileSize, y*tileSize, NULL);
             break;
 
         case 13:
-            al_draw_filled_rectangle(x*tileSize, y*tileSize, x*tileSize+tileSize, y*tileSize+tileSize, al_map_rgb(0, 0, 255));
+            al_draw_rotated_bitmap(groundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
+            al_draw_bitmap(metalResourceImage, x*tileSize, y*tileSize, NULL);
             break;
 
         case 14:
-            al_draw_filled_rectangle(x*tileSize, y*tileSize, x*tileSize+tileSize, y*tileSize+tileSize, al_map_rgb(255, 255, 0));
+            al_draw_rotated_bitmap(groundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
+            al_draw_bitmap(silverResourceImage, x*tileSize, y*tileSize, NULL);
             break;
     }
 }
@@ -380,12 +381,14 @@ void updateCamera(){
     if(cameraPosX + mapDisplayWidth >= mapArrayWidth*tileSize){
         cameraPosX = mapArrayWidth*tileSize - mapDisplayWidth;
     }
-    if(cameraPosY < 0){
-        cameraPosY = 0;
+    if(cameraPosY < -topGuiHeight){
+        cameraPosY = -topGuiHeight;
     }
-    if(cameraPosY + mapDisplayHeight >= mapArrayHeight*tileSize){
-        cameraPosY = mapArrayHeight*tileSize - mapDisplayHeight;
+    if(cameraPosY + botGuiHeight > mapArrayHeight*tileSize){
+        cameraPosY = mapArrayHeight*tileSize - botGuiHeight;
     }
+
+    printf("%f - %f\n", cameraPosY, cameraPosY + botGuiHeight);
 
     int cX = cameraPosX, cY = cameraPosY;
 

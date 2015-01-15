@@ -40,6 +40,10 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
     bloodGroundImage1 = al_load_bitmap("graphics/bloodGroundImage1.png");
     bloodGroundImage2 = al_load_bitmap("graphics/bloodGroundImage2.png");
     vineWallImage = al_load_bitmap("graphics/vineWallImage.png");
+    foodResourceImage = al_load_bitmap("graphics/foodResourceImage.png");
+    oilResourceImage = al_load_bitmap("graphics/oilResourceImage.png");
+    metalResourceImage = al_load_bitmap("graphics/metalResourceImage.png");
+    silverResourceImage = al_load_bitmap("graphics/silverResourceImage.png");
 
     event_queue = al_create_event_queue();
     timer = al_create_timer(1/FPS);
@@ -83,6 +87,9 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
     rakPeer = RakNet::RakPeerInterface::GetInstance();
 
     loadMapArray();
+
+    mapArrayHeight = maxMapArrayHeight;
+    mapArrayWidth = maxMapArrayWidth;
 
     al_start_timer(timer);
 }
