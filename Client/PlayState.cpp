@@ -74,43 +74,37 @@ void PlayState::update(Engine* engine){
 
     for(rakPacket = rakPeer->Receive(); rakPacket; rakPeer->DeallocatePacket(rakPacket), rakPacket = rakPeer->Receive()){
         switch(rakPacket->data[0]){
-                case ID_UNCONNECTED_PONG:{
-                        RakNet::BitStream bsIn(rakPacket->data, rakPacket->length, false);
-                        bsIn.IgnoreBytes(1);
-                        printf("Got pong");
-                }
 
-                case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-                    printf("Another client has disconnected.\n");
-                    break;
+            case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+                printf("Another client has disconnected.\n");
+                break;
 
-                case ID_REMOTE_CONNECTION_LOST:
-                    printf("Another client has lost the connection.\n");
-                    break;
+            case ID_REMOTE_CONNECTION_LOST:
+                printf("Another client has lost the connection.\n");
+                break;
 
-                case ID_REMOTE_NEW_INCOMING_CONNECTION:
-                    printf("Another client has connected.\n");
-                    break;
+            case ID_REMOTE_NEW_INCOMING_CONNECTION:
+                printf("Another client has connected.\n");
+                break;
 
-                case ID_CONNECTION_REQUEST_ACCEPTED:{
-                        printf("Our connection request has been accepted.\n");
-                        serverAddress = rakPacket->systemAddress;
+            case ID_CONNECTION_REQUEST_ACCEPTED:{
+                    printf("Our connection request has been accepted.\n");
+                    serverAddress = rakPacket->systemAddress;
 
-                        RakNet::BitStream bitStreamOUT;
-                        bitStreamOUT.Write((RakNet::MessageID)ID_CONNECTED_MESSAGE);
-                        bitStreamOUT.Write(rakClientName.c_str());
-                        rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-                    }
-                    break;
+                    RakNet::BitStream bitStreamOUT;
+                    bitStreamOUT.Write((RakNet::MessageID)ID_CONNECTED_MESSAGE);
+                    bitStreamOUT.Write(rakClientName.c_str());
+                    rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+                }break;
 
-                case ID_NO_FREE_INCOMING_CONNECTIONS:
-                    printf("The server is full.\n");
-                    break;
+            case ID_NO_FREE_INCOMING_CONNECTIONS:
+                printf("The server is full.\n");
+                break;
 
-                case ID_DISCONNECTION_NOTIFICATION:
-                    printf("We have been disconnected.\n");
-                    engine->changeState(MenuState::instance());
-                    break;
+            case ID_DISCONNECTION_NOTIFICATION:
+                printf("We have been disconnected.\n");
+                engine->changeState(MenuState::instance());
+                break;
 
                 case ID_CONNECTION_LOST:
                     printf("Connection lost.\n");
@@ -122,20 +116,26 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
                     bitStreamIN.Read(rakString);
                     printf("%s has connected!\n", rakString.C_String());
-                }
-                break;
+                }break;
 
             case ID_PLAYER_INITIALIZATION:{
-                    //int playerTile;
+                    int playerId;
+                    bool thisId;
+                    RakNet::RakString playerName;
 
                     RakNet::RakString rakString;
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
-                    //bitStreamIN.Read(playerTile);
-
-                    playerList[0] = new Player();
-                    //playerList[0]->setPlayerTile(playerTile);
-            }
+                    bitStreamIN.Read(playerId);
+                    bitStreamIN.Read(thisId);
+                    bitStreamIN.Read(playerName);
+                    if(thisId){
+                        rakClientId = playerId;
+                    }
+                    playerList[playerId] = new Player();
+                    playerList[playerId]->setPlayerId(playerId);
+                    playerList[playerId]->setPlayerName(playerName.C_String());
+                }break;
 
             case ID_CHAT_MESSAGE:{
                     RakNet::RakString name;
@@ -151,8 +151,7 @@ void PlayState::update(Engine* engine){
                     chatLog[chatLogSize-1].assign(name);
                     chatLog[chatLogSize-1].append(": ");
                     chatLog[chatLogSize-1].append(message);
-                    }
-                break;
+                }break;
 
             case ID_TRANSFER_MAP_TILE:{
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
@@ -162,8 +161,7 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.Read(x);
                     bitStreamIN.Read(y);
                     bitStreamIN.Read(mapArray[x][y]);
-                }
-                break;
+                }break;
 
             case ID_MAP_DIMENSIONS:{
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
@@ -171,8 +169,44 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
                     bitStreamIN.Read(mapArrayWidth);
                     bitStreamIN.Read(mapArrayHeight);
-            }
-            break;
+            }break;
+
+            case ID_END_TURN:{
+                    int playerId;
+                    bool endTurnSetting;
+
+                    RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
+
+                    bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
+                    bitStreamIN.Read(playerId);
+                    bitStreamIN.Read(endTurnSetting);
+
+                    playerList[playerId]->setPlayerTurn(endTurnSetting);
+            }break;
+
+            case ID_SET_RESOURCE:{
+                    int resourceEnum, amount;
+                    RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
+
+                    bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
+                    bitStreamIN.Read(resourceEnum);
+                    bitStreamIN.Read(amount);
+
+                    playerList[rakClientId]->setPlayerResource(resourceEnum, amount);
+            }break;
+
+            case ID_END_TURN_SYNCHRONIZE:{
+                    int metal, food, oil, silver;
+                    RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
+
+                    bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
+                    bitStreamIN.Read(metal);
+                    bitStreamIN.Read(food);
+                    bitStreamIN.Read(oil);
+                    bitStreamIN.Read(silver);
+
+                    playerList[rakClientId]->setPlayerResources(metal, food, oil, silver);
+            }break;
 
             default:
                 printf("Message with identifier %i has arrived.\n", rakPacket->data[0]);
@@ -193,17 +227,16 @@ void PlayState::update(Engine* engine){
         cameraPosX += cameraMoveSpeed;
     }
 
-    /*if(mouseButtonLeftClick){
-        int tX = floor(mouseX/tileSize), tY = floor(mouseY/tileSize);
+    if(mouseButtonLeftClick){
+        int tX = floor((mouseX+cameraOffsetX)/tileSize), tY = floor((mouseY+cameraOffsetY)/tileSize);
         if(insideMap(tX, tY, 0, 0)){
             RakNet::BitStream bitStreamOUT;
-            bitStreamOUT.Write((RakNet::MessageID)ID_PAINT_TILE);
+            bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
             bitStreamOUT.Write(tX);
             bitStreamOUT.Write(tY);
-            bitStreamOUT.Write(playerList[0]->getStats(1));
             rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
         }
-    }*/
+    }
 
     /*if(vertical != 0 && horizontal != 0){
         playerList[0]->deltaX /= sqrt(2);
@@ -222,6 +255,7 @@ void PlayState::update(Engine* engine){
         }
     }else if(al_key_down(&keyState, ALLEGRO_KEY_ENTER)){
         if(lastKeyPress != ALLEGRO_KEY_ENTER){
+            bool endTurn = true;
             for(int i = 0; i < MAX_INPUT_FIELDS; i++){
                 if(inputFieldList[i] != NULL){
                     if(inputFieldList[i]->getTypeId() == 3 && inputFieldList[i]->selected && inputFieldList[i]->getInput().size() > 0){
@@ -230,8 +264,15 @@ void PlayState::update(Engine* engine){
                         bitStreamOUT.Write(inputFieldList[i]->getInput().c_str());
                         rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
                         inputFieldList[i]->clearInput();
+                        endTurn = false;
                     }
                 }
+            }
+            if(endTurn){
+                RakNet::BitStream bitStreamOUT;
+                bitStreamOUT.Write((RakNet::MessageID)ID_END_TURN);
+                bitStreamOUT.Write(true);
+                rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
             }
             lastKeyPress = ALLEGRO_KEY_ENTER;
         }

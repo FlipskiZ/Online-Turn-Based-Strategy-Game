@@ -14,6 +14,7 @@ bool insideMap(float x, float y, float width, float height);
 void addButtonToList(Button *newButton);
 void addInputFieldToList(InputField *newInputField);
 void addParticleToList(ParticleEntity *newParticle);
+void addBuildingToList(Building *newBuilding);
 void loadMapArray();
 void saveMapArray();
 void drawMap();
@@ -31,17 +32,11 @@ ALLEGRO_BITMAP *explosionImage;
 
 ALLEGRO_BITMAP *groundImage1;
 ALLEGRO_BITMAP *groundImage2;
-ALLEGRO_BITMAP *wallImage;
-ALLEGRO_BITMAP *brokenWallImage;
-ALLEGRO_BITMAP *floorImage;
-ALLEGRO_BITMAP *brokenFloorImage;
-ALLEGRO_BITMAP *bloodGroundImage1;
-ALLEGRO_BITMAP *bloodGroundImage2;
-ALLEGRO_BITMAP *vineWallImage;
 ALLEGRO_BITMAP *foodResourceImage;
 ALLEGRO_BITMAP *oilResourceImage;
 ALLEGRO_BITMAP *metalResourceImage;
 ALLEGRO_BITMAP *silverResourceImage;
+ALLEGRO_BITMAP *minerBuildingImage;
 
 ALLEGRO_KEYBOARD_STATE keyState;
 ALLEGRO_MOUSE_STATE mouseState;
@@ -52,11 +47,13 @@ Button *buttonList[MAX_BUTTONS];
 InputField *inputFieldList[MAX_INPUT_FIELDS];
 ParticleEntity *particleList[MAX_PARTICLES];
 Player *playerList[MAX_PLAYERS];
+std::vector<Building*> buildingList;
 
 Engine engine;
 
 int mapArray[maxMapArrayWidth][maxMapArrayHeight];
 int mapArrayRotation[maxMapArrayWidth][maxMapArrayHeight];
+int mineralArray[maxMapArrayWidth][maxMapArrayHeight][maxMineralDepth][2];  ///mineralArray[x][y][Depth][0 - Type --- 1 - Quantity]
 
 const char* versionNumber;
 float fpsTimeNew, fpsCounter, fpsTimeOld;
@@ -73,7 +70,7 @@ std::string allegroString;
 RakNet::RakPeerInterface *rakPeer;
 RakNet::Packet *rakPacket;
 RakNet::SocketDescriptor rakSocketDescriptor;
-int rakPort;
+int rakPort, rakClientId;
 bool lanMode;
 RakNet::SystemAddress serverAddress;
 std::string rakIpAdress, rakClientName, serverIdSearch;
@@ -324,34 +321,6 @@ void drawTile(float x, float y, int tileId){
             al_draw_rotated_bitmap(groundImage2, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
             break;
 
-        case 2:
-            al_draw_bitmap(wallImage, x*tileSize, y*tileSize, NULL);
-            break;
-
-        case 3:
-            al_draw_rotated_bitmap(brokenWallImage, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
-            break;
-
-        case 6:
-            al_draw_bitmap(floorImage, x*tileSize, y*tileSize, NULL);
-            break;
-
-        case 7:
-            al_draw_rotated_bitmap(brokenFloorImage, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
-            break;
-
-        case 8:
-            al_draw_rotated_bitmap(bloodGroundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
-            break;
-
-        case 9:
-            al_draw_rotated_bitmap(bloodGroundImage2, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
-            break;
-
-        case 10:
-            al_draw_rotated_bitmap(vineWallImage, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
-            break;
-
         case 11:
             al_draw_rotated_bitmap(groundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
             al_draw_bitmap(foodResourceImage, x*tileSize, y*tileSize, NULL);
@@ -388,8 +357,6 @@ void updateCamera(){
         cameraPosY = mapArrayHeight*tileSize - botGuiHeight;
     }
 
-    printf("%f - %f\n", cameraPosY, cameraPosY + botGuiHeight);
-
     int cX = cameraPosX, cY = cameraPosY;
 
     mapDisplayOffsetX = -(cX%tileSize);
@@ -397,4 +364,9 @@ void updateCamera(){
 
     cameraOffsetX = -cameraPosX;
     cameraOffsetY = -cameraPosY;
+}
+
+void addBuildingToList(Building *newBuilding){
+    newBuilding->setBuildingId(buildingList.size());
+    buildingList.push_back(newBuilding);
 }

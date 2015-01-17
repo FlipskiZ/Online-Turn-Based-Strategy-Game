@@ -11,11 +11,16 @@ bool isPassable(float x, float y, float width, float height, float deltaX, float
 bool checkCollision(float x, float y, float ex, float ey, float width, float height, float ewidth, float eheight);
 bool insideMap(float x, float y, float width, float height);
 void enterCommand(std::string command);
-void addPlayerToList(Player *newPlayer);
+int addPlayerToList(Player *newPlayer);
+void addBuildingToList(Building *newBuilding);
 void loadMapArray();
 void saveMapArray();
+int findPlayer(RakNet::RakNetGUID senderGuid);
+bool endTurn();
+void connectBuildings();
 
 Player *playerList[MAX_PLAYERS];
+std::vector<Building*> buildingList;
 
 RakNet::RakPeerInterface *rakPeer;
 RakNet::Packet *rakPacket;
@@ -25,6 +30,7 @@ Engine engine;
 
 int mapArray[maxMapArrayWidth][maxMapArrayHeight]; ///Multi-dimensional mapArray[x][y]
 int mapArrayRotation[maxMapArrayWidth][maxMapArrayHeight];
+int mineralArray[maxMapArrayWidth][maxMapArrayHeight][maxMineralDepth][2]; ///mineralArray[x][y][Depth][0 - Type --- 1 - Quantity]
 
 const char* versionNumber;
 
@@ -68,8 +74,8 @@ int main(){
     std::cout << std::endl << "What should be the max amount of players on the server? Max: 64" << std::endl;
     std::cin >> maxPlayers;
 
-    if(maxPlayers > 64)
-        maxPlayers = 64;
+    if(maxPlayers > 16)
+        maxPlayers = 16;
 
     std::cout << std::endl;
 
@@ -124,14 +130,15 @@ void enterCommand(std::string command){
     }
 }
 
-void addPlayerToList(Player *newPlayer){
+int addPlayerToList(Player *newPlayer){
     for(int i = 0; i < maxPlayers; i++){
         if(playerList[i] == NULL){
             newPlayer->setPlayerId(i);
             playerList[i] = newPlayer;
-            return;
+            return i;
         }
     }
+    return -1;
 }
 
 void loadMapArray(){
@@ -162,4 +169,50 @@ void saveMapArray(){
     }
 
     mapArrayFile.close();
+}
+
+int findPlayer(RakNet::RakNetGUID senderGuid){
+    for(int i = 0; i < maxPlayers; i++){
+        if(playerList[i] != NULL && strcmp(playerList[i]->playerGuid.ToString(), senderGuid.ToString()) == 0){
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool endTurn(){
+    for(int i = 0; i < maxPlayers; i++){
+        if(playerList[i] != NULL){
+            if(!playerList[i]->getPlayerTurn()){
+                return false;
+            }
+        }
+    }
+
+    connectBuildings();
+
+    for(int i = 0; i < maxPlayers; i++){
+        if(playerList[i] != NULL){
+            playerList[i]->endPlayerTurn();
+        }
+    }
+    return true;
+}
+
+void connectBuildings(){
+    for(int i = 0; i < buildingList.size(); i++){
+        if(!buildingList[i]->getBuildingCapital()){
+            buildingList[i]->setBuildingOwner(-1);
+        }
+    }
+    for(int i = 0; i < buildingList.size(); i++){
+        if(buildingList[i]->getBuildingCapital()){
+            buildingList[i]->checkConnectedNeighbours(buildingList[i]->getBuildingPosX(), buildingList[i]->getBuildingPosY());
+        }
+    }
+}
+
+void addBuildingToList(Building *newBuilding){
+    newBuilding->setBuildingId(buildingList.size());
+    buildingList.push_back(newBuilding);
 }

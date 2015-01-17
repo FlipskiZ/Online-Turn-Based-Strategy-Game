@@ -26,6 +26,7 @@
 #include "Player.h"
 #include "ParticleEntity.h"
 #include "InputField.h"
+#include "Building.h"
 
 #define PI 3.14159265359
 #define toRadians 0.0174532925
@@ -42,12 +43,14 @@
 #define maxMapArrayWidth 400
 #define maxMapArrayHeight 200
 
+#define maxMineralDepth 3
+
 #define tileSize 32
 
 #define MAX_BUTTONS 100
 #define MAX_INPUT_FIELDS 50
 #define MAX_PARTICLES 1000
-#define MAX_PLAYERS 1
+#define MAX_PLAYERS 16
 
 #define FPS 60.0
 
@@ -59,6 +62,17 @@ enum GameMessages{
 	ID_CHAT_MESSAGE = ID_USER_PACKET_ENUM+3,
 	ID_TRANSFER_MAP_TILE = ID_USER_PACKET_ENUM+4,
 	ID_MAP_DIMENSIONS = ID_USER_PACKET_ENUM+5,
+    ID_PLACE_BUILDING = ID_USER_PACKET_ENUM+6,
+    ID_END_TURN = ID_USER_PACKET_ENUM+7,
+    ID_SET_RESOURCE = ID_USER_PACKET_ENUM+8,
+    ID_END_TURN_SYNCHRONIZE = ID_USER_PACKET_ENUM+9,
+};
+
+enum ResourceId{
+    RESOURCE_METAL,
+    RESOURCE_FOOD,
+    RESOURCE_OIL,
+    RESOURCE_SILVER
 };
 
 bool isPassable(float x, float y, float width, float height);
@@ -67,6 +81,7 @@ bool insideMap(float x, float y, float width, float height);
 void addButtonToList(Button *newButton);
 void addInputFieldToList(InputField *newInputField);
 void addParticleToList(ParticleEntity *newParticle);
+void addBuildingToList(Building *newBuilding);
 void loadMapArray();
 void saveMapArray();
 void drawMap();
@@ -80,21 +95,14 @@ extern ALLEGRO_FONT *smallFont;
 extern ALLEGRO_FONT *bigFont;
 
 extern ALLEGRO_BITMAP *cursorImage;
-extern ALLEGRO_BITMAP *explosionImage;
 
 extern ALLEGRO_BITMAP *groundImage1;
 extern ALLEGRO_BITMAP *groundImage2;
-extern ALLEGRO_BITMAP *wallImage;
-extern ALLEGRO_BITMAP *brokenWallImage;
-extern ALLEGRO_BITMAP *floorImage;
-extern ALLEGRO_BITMAP *brokenFloorImage;
-extern ALLEGRO_BITMAP *bloodGroundImage1;
-extern ALLEGRO_BITMAP *bloodGroundImage2;
-extern ALLEGRO_BITMAP *vineWallImage;
 extern ALLEGRO_BITMAP *foodResourceImage;
 extern ALLEGRO_BITMAP *oilResourceImage;
 extern ALLEGRO_BITMAP *metalResourceImage;
 extern ALLEGRO_BITMAP *silverResourceImage;
+extern ALLEGRO_BITMAP *minerBuildingImage;
 
 extern ALLEGRO_KEYBOARD_STATE keyState;
 extern ALLEGRO_MOUSE_STATE mouseState;
@@ -108,6 +116,8 @@ extern Player *playerList[MAX_PLAYERS];
 
 extern int mapArray[maxMapArrayWidth][maxMapArrayHeight];
 extern int mapArrayRotation[maxMapArrayWidth][maxMapArrayHeight];
+extern int buildingArray[maxMapArrayWidth][maxMapArrayHeight];
+extern int mineralArray[maxMapArrayWidth][maxMapArrayHeight][maxMineralDepth][2]; ///mineralArray[x][y][Depth][0 - Type --- 1 - Quantity]
 
 extern const char* versionNumber;
 extern float fpsTimeNew, fpsCounter, fpsTimeOld;
@@ -124,7 +134,7 @@ extern int mapArrayWidth, mapArrayHeight;
 extern RakNet::RakPeerInterface *rakPeer;
 extern RakNet::Packet *rakPacket;
 extern RakNet::SocketDescriptor rakSocketDescriptor;
-extern int rakPort;
+extern int rakPort, rakClientId;
 extern bool lanMode;
 extern RakNet::SystemAddress serverAddress;
 extern std::string rakIpAdress, rakClientName, serverIdSearch;

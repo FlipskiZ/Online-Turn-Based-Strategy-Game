@@ -29,21 +29,14 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
     smallFont = al_load_font("fonts/pixelFont.ttf", 16, 0);
 
     cursorImage = al_load_bitmap("graphics/cursorImage.png");
-    explosionImage = al_load_bitmap("graphics/explosionImage.png");
 
     groundImage1 = al_load_bitmap("graphics/groundImage1.png");
     groundImage2 = al_load_bitmap("graphics/groundImage2.png");
-    wallImage = al_load_bitmap("graphics/wallImage.png");
-    brokenWallImage = al_load_bitmap("graphics/brokenWallImage.png");
-    floorImage = al_load_bitmap("graphics/floorImage.png");
-    brokenFloorImage = al_load_bitmap("graphics/brokenFloorImage.png");
-    bloodGroundImage1 = al_load_bitmap("graphics/bloodGroundImage1.png");
-    bloodGroundImage2 = al_load_bitmap("graphics/bloodGroundImage2.png");
-    vineWallImage = al_load_bitmap("graphics/vineWallImage.png");
     foodResourceImage = al_load_bitmap("graphics/foodResourceImage.png");
     oilResourceImage = al_load_bitmap("graphics/oilResourceImage.png");
     metalResourceImage = al_load_bitmap("graphics/metalResourceImage.png");
     silverResourceImage = al_load_bitmap("graphics/silverResourceImage.png");
+    minerBuildingImage = al_load_bitmap("graphics/minerBuildingImage.png");
 
     event_queue = al_create_event_queue();
     timer = al_create_timer(1/FPS);
@@ -112,16 +105,8 @@ void Engine::cleanup(){
     al_destroy_font(smallFont);
     al_destroy_font(bigFont);
     al_destroy_bitmap(cursorImage);
-    al_destroy_bitmap(explosionImage);
     al_destroy_bitmap(groundImage1);
     al_destroy_bitmap(groundImage2);
-    al_destroy_bitmap(wallImage);
-    al_destroy_bitmap(brokenWallImage);
-    al_destroy_bitmap(floorImage);
-    al_destroy_bitmap(brokenFloorImage);
-    al_destroy_bitmap(bloodGroundImage1);
-    al_destroy_bitmap(bloodGroundImage2);
-    al_destroy_bitmap(vineWallImage);
     al_destroy_display(display);
     al_destroy_event_queue(event_queue);
     al_destroy_timer(timer);

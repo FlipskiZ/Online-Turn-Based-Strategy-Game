@@ -4,19 +4,28 @@
 class Player{
     public:
         Player();
-        void update();
+        void endPlayerTurn();
 
         void setPlayerId(int id);
         void setPlayerGuid(RakNet::RakNetGUID playerGuid);
         void setPlayerName(const char* playerName);
+        void setPlayerTurn(bool endTurn);
+        void setPlayerResources(int metalResource, int foodResource, int oilResource, int silverResource);
+        void changePlayerResource(int resourceEnum, int amount);
 
-        int getStats(int id);
+        int getPlayerId();
         std::string getPlayerName();
         RakNet::RakNetGUID playerGuid;
+        bool getPlayerTurn();
+        int getPlayerResource(int resourceEnum);
+
     protected:
     private:
         int playerId;
         std::string playerName;
+        bool endTurn;
+
+        int metalResource, foodResource, oilResource, silverResource;
 };
 
 #endif // PLAYER_H

@@ -8,14 +8,23 @@ class Player{
         void draw();
 
         void setPlayerId(int id);
-        void setPlayerTile(int playerTile);
+        void setPlayerName(const char* playerName);
+        void setPlayerTurn(bool endTurn);
+        void setPlayerResources(int metalResource, int foodResource, int oilResource, int silverResource);
+        void setPlayerResource(int resourceEnum, int amount);
 
-        int getStats(int id);
+        int getPlayerId();
+        std::string getPlayerName();
+        bool getPlayerTurn();
+        int getPlayerResource(int resourceEnum);
 
     protected:
     private:
         int playerId;
-        int playerTile;
+        std::string playerName;
+        bool endTurn;
+
+        int metalResource, foodResource, oilResource, silverResource;
 };
 
 #endif // PLAYER_H

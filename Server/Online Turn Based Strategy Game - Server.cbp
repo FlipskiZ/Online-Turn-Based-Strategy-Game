@@ -35,6 +35,8 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="Building.cpp" />
+		<Unit filename="Building.h" />
 		<Unit filename="Engine.cpp" />
 		<Unit filename="Engine.h" />
 		<Unit filename="GameState.h" />

@@ -26,7 +26,12 @@ void PlayState::init(){
 
     redChosen= false, greenChosen = false, blueChosen = false, yellowChosen = false;
 
-    loadMapArray();
+    //loadMapArray();
+    for(int x = 0; x < mapArrayWidth; x++){
+        for(int y = 0; y < mapArrayHeight; y++){
+            mapArray[x][y] = 11+rand()%4;
+        }
+    }
 }
 
 void PlayState::cleanup(){
@@ -57,7 +62,7 @@ void PlayState::update(Engine* engine){
                 break;
 
             case ID_CONNECTED_MESSAGE:{
-                    int randomTile;
+                    int playerId;
                     RakNet::RakString rakString;
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
@@ -67,7 +72,7 @@ void PlayState::update(Engine* engine){
                     Player *newPlayer = new Player();
                     newPlayer->setPlayerName(rakString.C_String());
                     newPlayer->setPlayerGuid(rakPacket->guid);
-                    addPlayerToList(newPlayer);
+                    playerId = addPlayerToList(newPlayer);
 
                     RakNet::BitStream bitStreamOUT;
                     bitStreamOUT.Write((RakNet::MessageID)ID_CONNECTED_MESSAGE);
@@ -90,28 +95,53 @@ void PlayState::update(Engine* engine){
                             rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
                         }
                     }
+                    for(int i = 0; playerList[i] != NULL; i++){
+                        if(i != playerId){
+                            bitStreamOUT.Reset();
+                            bitStreamOUT.Write((RakNet::MessageID)ID_PLAYER_INITIALIZATION);
+                            bitStreamOUT.Write(i);
+                            bitStreamOUT.Write(false);
+                            bitStreamOUT.Write(playerList[i]->getPlayerName());
+
+                            rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
+                        }
+                    }
+
                     bitStreamOUT.Reset();
                     bitStreamOUT.Write((RakNet::MessageID)ID_PLAYER_INITIALIZATION);
+                    bitStreamOUT.Write(playerId);
+                    bitStreamOUT.Write(false);
+                    bitStreamOUT.Write(playerList[playerId]->getPlayerName());
 
-                    do{
-                        randomTile = 11+rand()%4;
-                    }while(((randomTile == 11 && redChosen) || (randomTile == 12 && greenChosen) || (randomTile == 13 && blueChosen) || (randomTile == 14 && yellowChosen)) && !(redChosen && greenChosen && blueChosen && yellowChosen));
-                    if(randomTile == 11)
-                        redChosen = true;
-                    else if(randomTile == 11)
-                        greenChosen = true;
-                    else if(randomTile == 12)
-                        blueChosen = true;
-                    else if(randomTile == 13)
-                        yellowChosen = true;
+                    rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, true);
 
-                    bitStreamOUT.Write(randomTile);
+                    bitStreamOUT.Reset();
+                    bitStreamOUT.Write((RakNet::MessageID)ID_PLAYER_INITIALIZATION);
+                    bitStreamOUT.Write(playerId);
+                    bitStreamOUT.Write(true);
+                    bitStreamOUT.Write(playerList[playerId]->getPlayerName());
 
                     rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
-                }
-                break;
+                    {
+                        int posX, posY, playerId;
+                        for(int i = 0; i < buildingList.size(); i++){
+                            posX = buildingList[i]->getBuildingPosX();
+                            posY = buildingList[i]->getBuildingPosY();
+                            playerId = buildingList[i]->getBuildingOwner();
+
+                            bitStreamOUT.Reset();
+                            bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
+                            bitStreamOUT.Write(playerId);
+                            bitStreamOUT.Write(posX);
+                            bitStreamOUT.Write(posY);
+                            bitStreamOUT.Write(0);///Building Type
+                            rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
+                        }
+                    }
+                }break;
 
             case ID_CHAT_MESSAGE:{
+                    int playerId = findPlayer(rakPacket->guid);
                     RakNet::RakString message;
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
@@ -119,17 +149,69 @@ void PlayState::update(Engine* engine){
 
                     RakNet::BitStream bitStreamOUT;
                     bitStreamOUT.Write((RakNet::MessageID)ID_CHAT_MESSAGE);
-                        for(int i = 0; i < maxPlayers; i++){
-                            if(playerList[i] != NULL && strcmp(playerList[i]->playerGuid.ToString(), rakPacket->guid.ToString()) == 0){
-                                bitStreamOUT.Write(playerList[i]->getPlayerName().c_str());
-                                printf("%s: %s\n", playerList[i]->getPlayerName().c_str(), message.C_String());
-                            }
-                        }
+                    bitStreamOUT.Write(playerList[playerId]->getPlayerName().c_str());
+                    printf("%s: %s\n", playerList[playerId]->getPlayerName().c_str(), message.C_String());
                     bitStreamOUT.Write(message.C_String());
                     rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
-                }
-                break;
-            break;
+                }break;
+
+            case ID_PLACE_BUILDING:{
+                    int playerId = findPlayer(rakPacket->guid);
+                    int posX, posY;
+
+                    RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
+                    bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
+                    bitStreamIN.Read(posX);
+                    bitStreamIN.Read(posY);
+
+                    Building *newBuilding = new Building();
+                    newBuilding->setBuildingPos(posX, posY);
+                    newBuilding->setBuildingType(0);
+                    newBuilding->setBuildingOwner(playerId);
+                    addBuildingToList(newBuilding);
+
+                    RakNet::BitStream bitStreamOUT;
+                    bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
+                    bitStreamOUT.Write(playerId);
+                    bitStreamOUT.Write(posX);
+                    bitStreamOUT.Write(posY);
+                    bitStreamOUT.Write(0);///Building Type
+                    rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+                }break;
+
+            case ID_END_TURN:{
+                    int playerId = findPlayer(rakPacket->guid);
+                    bool endTurnSetting;
+
+                    RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
+                    bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
+                    bitStreamIN.Read(endTurnSetting);
+
+                    playerList[playerId]->setPlayerTurn(endTurnSetting);
+
+                    RakNet::BitStream bitStreamOUT;
+                    bitStreamOUT.Write((RakNet::MessageID)ID_END_TURN);
+                    bitStreamOUT.Write(playerId);
+                    bitStreamOUT.Write(endTurnSetting);
+                    rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+
+                    if(endTurn()){
+                        RakNet::BitStream bitStreamOUT;
+
+                        for(int i = 0; i < maxPlayers; i++){
+                            if(playerList[i] != NULL){
+                                bitStreamOUT.Reset();
+                                bitStreamOUT.Write((RakNet::MessageID)ID_END_TURN_SYNCHRONIZE);
+                                bitStreamOUT.Write(playerList[i]->getPlayerResource(RESOURCE_METAL));
+                                bitStreamOUT.Write(playerList[i]->getPlayerResource(RESOURCE_FOOD));
+                                bitStreamOUT.Write(playerList[i]->getPlayerResource(RESOURCE_OIL));
+                                bitStreamOUT.Write(playerList[i]->getPlayerResource(RESOURCE_SILVER));
+                                rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
+
+                            }
+                        }
+                    }
+                }break;
 
             default:
                 printf("Message with identifier %i has arrived.\n", rakPacket->data[0]);

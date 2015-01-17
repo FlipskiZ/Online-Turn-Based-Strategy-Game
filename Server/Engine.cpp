@@ -8,16 +8,27 @@ void Engine::init(const char* title){
 
     m_running = true;
 
-    versionNumber = "v1.0";
+    versionNumber = "v0.01";
 
     done = false;
     port = 0, maxPlayers = 0;
     serverCommand.clear();
 
-    mapArrayWidth = 40;
-    mapArrayHeight = 20;
+    mapArrayWidth = maxMapArrayWidth;
+    mapArrayHeight = maxMapArrayHeight;
 
-    loadMapArray();
+    for(int x = 0; x < mapArrayWidth; x++){
+        for(int y = 0; y < mapArrayHeight; y++){
+            mapArrayRotation[x][y] = 0;
+            mapArray[x][y] = 0;
+            for(int z = 0; z < maxMineralDepth; z++){
+                mineralArray[x][y][z][0] = 0;
+                mineralArray[x][y][z][1] = 0;
+            }
+        }
+    }
+
+    //loadMapArray();
 }
 
 void Engine::cleanup(){
