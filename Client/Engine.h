@@ -39,6 +39,7 @@
 
 #define topGuiHeight 32
 #define botGuiHeight 592//mapDisplayHeight+topGuiHeight
+#define leftGuiWidth 64
 
 #define maxMapArrayWidth 400
 #define maxMapArrayHeight 200
@@ -50,11 +51,29 @@
 #define MAX_BUTTONS 100
 #define MAX_INPUT_FIELDS 50
 #define MAX_PARTICLES 1000
-#define MAX_PLAYERS 16
+#define MAX_PLAYERS 8
 
 #define FPS 60.0
 
 #define chatLogSize 100
+
+#define PLAYER_RED_COLOR al_map_rgb(255,0,0)
+#define PLAYER_GREEN_COLOR al_map_rgb(0,255,0)
+#define PLAYER_BLUE_COLOR al_map_rgb(0,0,255)
+#define PLAYER_YELLOW_COLOR al_map_rgb(255,255,0)
+#define PLAYER_MAGENTA_COLOR al_map_rgb(255,0,255)
+#define PLAYER_CYAN_COLOR al_map_rgb(0,255,255)
+#define PLAYER_BLACK_COLOR al_map_rgb(50,50,50)
+#define PLAYER_WHITE_COLOR al_map_rgb(255,255,255)
+
+#define PLAYER_RED_COLOR_TINT al_map_rgba(127,0,0,10)
+#define PLAYER_GREEN_COLOR_TINT al_map_rgba(0,127,0,10)
+#define PLAYER_BLUE_COLOR_TINT al_map_rgba(0,0,127,10)
+#define PLAYER_YELLOW_COLOR_TINT al_map_rgba(127,127,127,10)
+#define PLAYER_MAGENTA_COLOR_TINT al_map_rgba(127,0,127,10)
+#define PLAYER_CYAN_COLOR_TINT al_map_rgba(0,127,127,10)
+#define PLAYER_BLACK_COLOR_TINT al_map_rgba(0,0,0,10)
+#define PLAYER_WHITE_COLOR_TINT al_map_rgba(127,127,127,10)
 
 enum GameMessages{
     ID_CONNECTED_MESSAGE = ID_USER_PACKET_ENUM+1,
@@ -66,6 +85,8 @@ enum GameMessages{
     ID_END_TURN = ID_USER_PACKET_ENUM+7,
     ID_SET_RESOURCE = ID_USER_PACKET_ENUM+8,
     ID_END_TURN_SYNCHRONIZE = ID_USER_PACKET_ENUM+9,
+    ID_TRANSFER_MINERAL_TILE = ID_USER_PACKET_ENUM+10,
+    ID_SET_BUILDING_OWNER = ID_USER_PACKET_ENUM+11,
 };
 
 enum ResourceId{
@@ -73,6 +94,22 @@ enum ResourceId{
     RESOURCE_FOOD,
     RESOURCE_OIL,
     RESOURCE_SILVER
+};
+
+enum PlayerColorId{
+    PLAYER_NONE = -1,
+    PLAYER_RED,
+    PLAYER_GREEN,
+    PLAYER_BLUE,
+    PLAYER_YELLOW,
+    PLAYER_MAGENTA,
+    PLAYER_CYAN,
+    PLAYER_BLACK,
+    PLAYER_WHITE,
+};
+
+enum BuildingTypes{
+    BUILDING_MINER,
 };
 
 bool isPassable(float x, float y, float width, float height);
@@ -84,9 +121,11 @@ void addParticleToList(ParticleEntity *newParticle);
 void addBuildingToList(Building *newBuilding);
 void loadMapArray();
 void saveMapArray();
+int findBuilding(int posX, int posY);
 void drawMap();
-void drawTile(float x, float y, int tileId);
+void drawTile(float x, float y, int mapOffsetX, int mapOffsetY);
 void updateCamera();
+bool visibleInCamera(float posX, float posY, float width, float height);
 
 extern ALLEGRO_DISPLAY *display;
 
@@ -113,10 +152,11 @@ extern Button *buttonList[MAX_BUTTONS];
 extern InputField *inputFieldList[MAX_INPUT_FIELDS];
 extern ParticleEntity *particleList[MAX_PARTICLES];
 extern Player *playerList[MAX_PLAYERS];
+extern std::vector<Building*> buildingList;
 
 extern int mapArray[maxMapArrayWidth][maxMapArrayHeight];
 extern int mapArrayRotation[maxMapArrayWidth][maxMapArrayHeight];
-extern int buildingArray[maxMapArrayWidth][maxMapArrayHeight];
+extern int buildingIndex[maxMapArrayWidth][maxMapArrayHeight];
 extern int mineralArray[maxMapArrayWidth][maxMapArrayHeight][maxMineralDepth][2]; ///mineralArray[x][y][Depth][0 - Type --- 1 - Quantity]
 
 extern const char* versionNumber;

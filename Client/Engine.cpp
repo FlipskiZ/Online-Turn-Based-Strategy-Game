@@ -7,6 +7,13 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
 
 	// initialize ALLEGRO
 	al_init();
+    if(fullscreen){
+		al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+	}else{
+        al_set_new_display_flags(ALLEGRO_WINDOWED);
+	}
+	al_set_new_display_flags(ALLEGRO_OPENGL);
+    display = al_create_display(screenWidth, screenHeight);
     al_init_font_addon();
     al_init_ttf_addon();
     al_init_primitives_addon();
@@ -15,13 +22,6 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
     al_install_keyboard();
     al_install_mouse();
     al_install_audio();
-
-    if(fullscreen){
-		al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
-	}else{
-        al_set_new_display_flags(ALLEGRO_WINDOWED);
-	}
-    display = al_create_display(screenWidth, screenHeight);
     al_set_window_title(display, title);
 
     bigFont = al_load_font("fonts/pixelFont.ttf", 48, 0);
@@ -81,8 +81,8 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
 
     loadMapArray();
 
-    mapArrayHeight = maxMapArrayHeight;
-    mapArrayWidth = maxMapArrayWidth;
+    mapArrayHeight = maxMapArrayHeight/5;
+    mapArrayWidth = maxMapArrayWidth/5;
 
     al_start_timer(timer);
 }

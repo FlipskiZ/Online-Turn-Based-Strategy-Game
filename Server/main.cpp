@@ -16,6 +16,7 @@ void addBuildingToList(Building *newBuilding);
 void loadMapArray();
 void saveMapArray();
 int findPlayer(RakNet::RakNetGUID senderGuid);
+int findBuilding(int posX, int posY);
 bool endTurn();
 void connectBuildings();
 
@@ -30,6 +31,8 @@ Engine engine;
 
 int mapArray[maxMapArrayWidth][maxMapArrayHeight]; ///Multi-dimensional mapArray[x][y]
 int mapArrayRotation[maxMapArrayWidth][maxMapArrayHeight];
+int mapArrayOwner[maxMapArrayWidth][maxMapArrayHeight];
+int buildingIndex[maxMapArrayWidth][maxMapArrayHeight];
 int mineralArray[maxMapArrayWidth][maxMapArrayHeight][maxMineralDepth][2]; ///mineralArray[x][y][Depth][0 - Type --- 1 - Quantity]
 
 const char* versionNumber;
@@ -71,11 +74,11 @@ int main(){
     std::cout << "Which port to use? The default is 2020." << std::endl;
     std::cin >> port;
 
-    std::cout << std::endl << "What should be the max amount of players on the server? Max: 64" << std::endl;
+    std::cout << std::endl << "What should be the max amount of players on the server? Max: 8" << std::endl;
     std::cin >> maxPlayers;
 
-    if(maxPlayers > 16)
-        maxPlayers = 16;
+    if(maxPlayers > 8)
+        maxPlayers = 8;
 
     std::cout << std::endl;
 
@@ -127,6 +130,8 @@ void enterCommand(std::string command){
     if(command.compare("shutdown") || command.compare("exit")){
         rakPeer->Shutdown(300);
         engine.quit();
+    }else if(command.compare("print")){
+        printf("\nX:%d Y:%d\n", buildingList[0]->getBuildingPosX(), buildingList[0]->getBuildingPosY());
     }
 }
 
@@ -139,6 +144,12 @@ int addPlayerToList(Player *newPlayer){
         }
     }
     return -1;
+}
+
+void addBuildingToList(Building *newBuilding){
+    buildingIndex[newBuilding->getBuildingPosX()][newBuilding->getBuildingPosY()] = buildingList.size();
+    newBuilding->setBuildingId(buildingList.size());
+    buildingList.push_back(newBuilding);
 }
 
 void loadMapArray(){
@@ -180,6 +191,12 @@ int findPlayer(RakNet::RakNetGUID senderGuid){
     return -1;
 }
 
+int findBuilding(int posX, int posY){
+    if(posX > 0 && posX < mapArrayWidth && posY > 0 && posY < mapArrayHeight)
+        return buildingIndex[posX][posY];
+    return -1;
+}
+
 bool endTurn(){
     for(int i = 0; i < maxPlayers; i++){
         if(playerList[i] != NULL){
@@ -200,6 +217,13 @@ bool endTurn(){
 }
 
 void connectBuildings(){
+    int mapArrayOwnerTemp[mapArrayWidth][mapArrayHeight];
+    for(int x = 0; x < mapArrayWidth; x++){
+        for(int y = 0; y < mapArrayHeight; y++){
+            mapArrayOwnerTemp[x][y] = mapArrayOwner[x][y];
+            mapArrayOwner[x][y] = -1;
+        }
+    }
     for(int i = 0; i < buildingList.size(); i++){
         if(!buildingList[i]->getBuildingCapital()){
             buildingList[i]->setBuildingOwner(-1);
@@ -207,12 +231,22 @@ void connectBuildings(){
     }
     for(int i = 0; i < buildingList.size(); i++){
         if(buildingList[i]->getBuildingCapital()){
-            buildingList[i]->checkConnectedNeighbours(buildingList[i]->getBuildingPosX(), buildingList[i]->getBuildingPosY());
+            buildingList[i]->checkConnectedNeighbours();
         }
     }
-}
-
-void addBuildingToList(Building *newBuilding){
-    newBuilding->setBuildingId(buildingList.size());
-    buildingList.push_back(newBuilding);
+    RakNet::BitStream bitStreamOUT;
+    for(int x = 0; x < mapArrayWidth; x++){
+        for(int y = 0; y < mapArrayHeight; y++){
+            if(mapArrayOwnerTemp[x][y] != mapArrayOwner[x][y]){
+                if(findBuilding(x, y) > -1){
+                    bitStreamOUT.Reset();
+                    bitStreamOUT.Write((RakNet::MessageID)ID_SET_BUILDING_OWNER);
+                    bitStreamOUT.Write(buildingList[findBuilding(x, y)]->getBuildingOwner());
+                    bitStreamOUT.Write(x);
+                    bitStreamOUT.Write(y);
+                    rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+                }
+            }
+        }
+    }
 }

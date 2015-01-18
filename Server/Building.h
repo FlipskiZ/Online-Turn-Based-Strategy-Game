@@ -18,7 +18,7 @@ class Building{
         int getBuildingOwner();
         bool getBuildingCapital();
 
-        void checkConnectedNeighbours(int posX, int posY);
+        void checkConnectedNeighbours();
     protected:
     private:
         int posX, posY;

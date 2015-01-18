@@ -4,6 +4,7 @@
 class Building{
     public:
         Building();
+        void draw();
 
         void setBuildingPos(int posX, int posY);
         void setBuildingId(int buildingId);
@@ -15,7 +16,7 @@ class Building{
         int getBuildingPosY();
         int getBuildingId();
         int getBuildingType();
-        int getBuildingOwnerId();
+        int getBuildingOwner();
         bool getBuildingCapital();
     protected:
     private:

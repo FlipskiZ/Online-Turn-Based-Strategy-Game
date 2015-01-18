@@ -42,24 +42,27 @@ bool Building::getBuildingCapital(){
     return this->capital;
 }
 
-void Building::checkConnectedNeighbours(int posX, int posY){
-    for(int i = 0; i < buildingList.size(); i++){
-        if(buildingList[i]->getBuildingPosX() == posX-1 && buildingList[i]->getBuildingPosY() == posY && buildingList[i]->getBuildingOwner() == -1){
-            buildingList[i]->setBuildingOwner(this->ownerId);
-            buildingList[i]->checkConnectedNeighbours(buildingList[i]->getBuildingPosX(), buildingList[i]->getBuildingPosY());
-
-        }else if(buildingList[i]->getBuildingPosX() == posX+1 && buildingList[i]->getBuildingPosY() == posY){
-            buildingList[i]->setBuildingOwner(this->ownerId);
-            buildingList[i]->checkConnectedNeighbours(buildingList[i]->getBuildingPosX(), buildingList[i]->getBuildingPosY());
-
-        }else if(buildingList[i]->getBuildingPosX() == posX && buildingList[i]->getBuildingPosY() == posY-1){
-            buildingList[i]->setBuildingOwner(this->ownerId);
-            buildingList[i]->checkConnectedNeighbours(buildingList[i]->getBuildingPosX(), buildingList[i]->getBuildingPosY());
-
-        }else if(buildingList[i]->getBuildingPosX() == posX && buildingList[i]->getBuildingPosY() == posY+1){
-            buildingList[i]->setBuildingOwner(this->ownerId);
-            buildingList[i]->checkConnectedNeighbours(buildingList[i]->getBuildingPosX(), buildingList[i]->getBuildingPosY());
-
+void Building::checkConnectedNeighbours(){
+    if(findBuilding(this->posX-1, this->posY) > -1){
+        if(buildingList[findBuilding(this->posX-1, this->posY)]->getBuildingOwner() == -1){///Avoid infinite loop
+            buildingList[findBuilding(this->posX-1, this->posY)]->setBuildingOwner(this->ownerId);
+            buildingList[findBuilding(this->posX-1, this->posY)]->checkConnectedNeighbours();
+        }
+    }if(findBuilding(this->posX+1, this->posY) > -1){
+        if(buildingList[findBuilding(this->posX+1, this->posY)]->getBuildingOwner() == -1){
+            buildingList[findBuilding(this->posX+1, this->posY)]->setBuildingOwner(this->ownerId);
+            buildingList[findBuilding(this->posX+1, this->posY)]->checkConnectedNeighbours();
+        }
+    }if(findBuilding(this->posX, this->posY-1) > -1){
+        if(buildingList[findBuilding(this->posX, this->posY-1)]->getBuildingOwner() == -1){
+            buildingList[findBuilding(this->posX, this->posY-1)]->setBuildingOwner(this->ownerId);
+            buildingList[findBuilding(this->posX, this->posY-1)]->checkConnectedNeighbours();
+        }
+    }if(findBuilding(this->posX, this->posY+1) > -1){
+        if(buildingList[findBuilding(this->posX, this->posY+1)]->getBuildingOwner() == -1){
+            buildingList[findBuilding(this->posX, this->posY+1)]->setBuildingOwner(this->ownerId);
+            buildingList[findBuilding(this->posX, this->posY+1)]->checkConnectedNeighbours();
         }
     }
+    mapArrayOwner[this->posX][this->posY] = this->ownerId;
 }

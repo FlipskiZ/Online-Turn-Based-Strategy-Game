@@ -122,6 +122,7 @@ void PlayState::update(Engine* engine){
                     int playerId;
                     bool thisId;
                     RakNet::RakString playerName;
+                    int metalResource, foodResource, oilResource, silverResource;
 
                     RakNet::RakString rakString;
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
@@ -130,11 +131,17 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.Read(thisId);
                     bitStreamIN.Read(playerName);
                     if(thisId){
+                        bitStreamIN.Read(metalResource);
+                        bitStreamIN.Read(foodResource);
+                        bitStreamIN.Read(oilResource);
+                        bitStreamIN.Read(silverResource);
                         rakClientId = playerId;
                     }
+
                     playerList[playerId] = new Player();
                     playerList[playerId]->setPlayerId(playerId);
                     playerList[playerId]->setPlayerName(playerName.C_String());
+                    playerList[playerId]->setPlayerResources(metalResource, foodResource, oilResource, silverResource);
                 }break;
 
             case ID_CHAT_MESSAGE:{
@@ -171,6 +178,28 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.Read(mapArrayHeight);
             }break;
 
+            case ID_PLACE_BUILDING:{
+                    int playerId;
+                    int posX, posY, buildingType;
+                    bool capitalBuilding;
+
+                    RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
+
+                    bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
+                    bitStreamIN.Read(playerId);
+                    bitStreamIN.Read(posX);
+                    bitStreamIN.Read(posY);
+                    bitStreamIN.Read(buildingType);
+                    bitStreamIN.Read(capitalBuilding);
+
+                    Building *newBuilding = new Building();
+                    newBuilding->setBuildingPos(posX, posY);
+                    newBuilding->setBuildingType(buildingType);
+                    newBuilding->setBuildingOwner(playerId);
+                    newBuilding->setBuildingCapital(capitalBuilding);
+                    addBuildingToList(newBuilding);
+            }break;
+
             case ID_END_TURN:{
                     int playerId;
                     bool endTurnSetting;
@@ -185,14 +214,16 @@ void PlayState::update(Engine* engine){
             }break;
 
             case ID_SET_RESOURCE:{
-                    int resourceEnum, amount;
+                    int resourceEnum, amount, loopAmount;
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
 
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
-                    bitStreamIN.Read(resourceEnum);
-                    bitStreamIN.Read(amount);
-
-                    playerList[rakClientId]->setPlayerResource(resourceEnum, amount);
+                    bitStreamIN.Read(loopAmount);
+                    for(int i = 0; i < loopAmount; i++){
+                        bitStreamIN.Read(resourceEnum);
+                        bitStreamIN.Read(amount);
+                        playerList[rakClientId]->setPlayerResource(resourceEnum, amount);
+                    }
             }break;
 
             case ID_END_TURN_SYNCHRONIZE:{
@@ -206,6 +237,36 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.Read(silver);
 
                     playerList[rakClientId]->setPlayerResources(metal, food, oil, silver);
+            }break;
+
+            case ID_TRANSFER_MINERAL_TILE:{
+                    int posX, posY, mineralId, mineralQuantity;
+                    RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
+
+                    bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
+                    bitStreamIN.Read(posX);
+                    bitStreamIN.Read(posY);
+                    bitStreamIN.Read(mineralId);
+                    bitStreamIN.Read(mineralQuantity);
+
+                    mineralArray[posX][posY][0][0] = mineralId;
+                    mineralArray[posX][posY][0][1] = mineralQuantity;
+            }break;
+
+            case ID_SET_BUILDING_OWNER:{
+                    int posX, posY, buildingOwner, buildingId;
+
+                    RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
+
+                    bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
+                    bitStreamIN.Read(buildingOwner);
+                    bitStreamIN.Read(posX);
+                    bitStreamIN.Read(posY);
+                    buildingId = findBuilding(posX, posY);
+                    if(buildingId > -1){
+                        buildingList[buildingId]->setBuildingOwner(buildingOwner);
+                        printf("X: %d - Y: %d - ID: %d - OWN: %d", posX, posY, buildingId, buildingOwner);
+                    }
             }break;
 
             default:
@@ -228,7 +289,7 @@ void PlayState::update(Engine* engine){
     }
 
     if(mouseButtonLeftClick){
-        int tX = floor((mouseX+cameraOffsetX)/tileSize), tY = floor((mouseY+cameraOffsetY)/tileSize);
+        int tX = floor((mouseX+cameraPosX)/tileSize), tY = floor((mouseY+cameraPosY)/tileSize);
         if(insideMap(tX, tY, 0, 0)){
             RakNet::BitStream bitStreamOUT;
             bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
@@ -330,7 +391,11 @@ void PlayState::update(Engine* engine){
 void PlayState::draw(Engine* engine){
     //Draw Map+
     drawMap();
-    //Draw Map-
+
+    for(int i = 0; i < buildingList.size(); i++){
+        buildingList[i]->draw();
+    }
+    //Draw Map-0
 
     //Draw Entities +
     for(int i = 0; i < MAX_PLAYERS; i++){
@@ -347,7 +412,9 @@ void PlayState::draw(Engine* engine){
     //Draw Entities -
 
     //Draw GUI +
-    al_draw_filled_rectangle(0, botGuiHeight, screenWidth, screenHeight, al_map_rgba(0,0,0,127));
+    al_draw_filled_rectangle(0, botGuiHeight, screenWidth, screenHeight, al_map_rgba(0,0,0,127));///Draw the bot GUI
+    al_draw_filled_rectangle(0, 0, screenWidth, topGuiHeight, al_map_rgba(0,0,0,127));///Draw the top GUI
+    al_draw_filled_rectangle(0, topGuiHeight, leftGuiWidth, botGuiHeight, al_map_rgba(0,0,0,127));///Draw the Left GUI
 
     for(int i = chatLogPos; i < chatLogSize; i++){
         if(screenHeight-40-15*(i-chatLogPos) >= botGuiHeight-5){
@@ -362,6 +429,39 @@ void PlayState::draw(Engine* engine){
     for(int i = 0; i < MAX_INPUT_FIELDS; i++){
         if(inputFieldList[i] != NULL){
             inputFieldList[i]->draw();
+        }
+    }
+
+    ///Drawing the players resources
+    if(playerList[rakClientId] != NULL){
+        al_draw_bitmap(metalResourceImage, 0, 0, NULL); al_draw_textf(smallFont, al_map_rgb(150, 150, 150), 32, 0, 0, "%d", playerList[rakClientId]->getPlayerResource(RESOURCE_METAL));
+        al_draw_bitmap(foodResourceImage, 128, 0, NULL); al_draw_textf(smallFont, al_map_rgb(150, 150, 150), 160, 0, 0, "%d", playerList[rakClientId]->getPlayerResource(RESOURCE_FOOD));
+        al_draw_bitmap(oilResourceImage, 256, 0, NULL); al_draw_textf(smallFont, al_map_rgb(150, 150, 150), 288, 0, 0, "%d", playerList[rakClientId]->getPlayerResource(RESOURCE_OIL));
+        al_draw_bitmap(silverResourceImage, 384, 0, NULL); al_draw_textf(smallFont, al_map_rgb(150, 150, 150), 416, 0, 0, "%d", playerList[rakClientId]->getPlayerResource(RESOURCE_SILVER));
+    }
+
+    ///Drawing the other players color, the first 3 letters of their name and if they have finished their turn on the left GUI
+    for(int i = 0; i < MAX_PLAYERS; i++){
+        if(playerList[i] != NULL){
+            if(i == PLAYER_RED){
+                al_draw_filled_rectangle(0, topGuiHeight+32*i, 32, topGuiHeight+32+32*i, PLAYER_RED_COLOR);
+            }else if(i == PLAYER_GREEN){
+                al_draw_filled_rectangle(0, topGuiHeight+32*i, 32, topGuiHeight+32+32*i, PLAYER_GREEN_COLOR);
+            }else if(i == PLAYER_BLUE){
+                al_draw_filled_rectangle(0, topGuiHeight+32*i, 32, topGuiHeight+32+32*i, PLAYER_BLUE_COLOR);
+            }else if(i == PLAYER_YELLOW){
+                al_draw_filled_rectangle(0, topGuiHeight+32*i, 32, topGuiHeight+32+32*i, PLAYER_YELLOW_COLOR);
+            }else if(i == PLAYER_MAGENTA){
+                al_draw_filled_rectangle(0, topGuiHeight+32*i, 32, topGuiHeight+32+32*i, PLAYER_MAGENTA_COLOR);
+            }else if(i == PLAYER_CYAN){
+                al_draw_filled_rectangle(0, topGuiHeight+32*i, 32, topGuiHeight+32+32*i, PLAYER_CYAN_COLOR);
+            }else if(i == PLAYER_BLACK){
+                al_draw_filled_rectangle(0, topGuiHeight+32*i, 32, topGuiHeight+32+32*i, PLAYER_BLACK_COLOR);
+            }else if(i == PLAYER_WHITE){
+                al_draw_filled_rectangle(0, topGuiHeight+32*i, 32, topGuiHeight+32+32*i, PLAYER_WHITE_COLOR);
+            }
+            al_draw_textf(smallFont, al_map_rgb(150, 150, 150), 16, (topGuiHeight+32*i)+(32-al_get_font_line_height(smallFont))/2, ALLEGRO_ALIGN_CENTER, playerList[i]->getPlayerName().substr(0, 3).c_str());
+            al_draw_filled_rectangle(32, topGuiHeight+32*i, 64, topGuiHeight+32+32*i, (playerList[i]->getPlayerTurn()) ? al_map_rgb(50, 200, 50) : al_map_rgb(200, 50, 50));
         }
     }
 

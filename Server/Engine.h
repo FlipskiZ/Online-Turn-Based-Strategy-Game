@@ -23,12 +23,6 @@
 #define PI 3.14159265359
 #define toRadians 0.0174532925
 
-#define screenWidth 1280
-#define screenHeight 720
-
-#define mapDisplayWidth 1280
-#define mapDisplayHeight 640
-
 #define maxMapArrayWidth 400
 #define maxMapArrayHeight 200
 
@@ -36,9 +30,14 @@
 
 #define tileSize 32
 
-#define MAX_PLAYERS 16
+#define MAX_PLAYERS 8
 
 #define FPS 60.0
+
+#define START_METAL 50
+#define START_FOOD 50
+#define START_OIL 50
+#define START_SILVER 50
 
 enum GameMessages{
     ID_CONNECTED_MESSAGE = ID_USER_PACKET_ENUM+1,
@@ -50,6 +49,8 @@ enum GameMessages{
     ID_END_TURN = ID_USER_PACKET_ENUM+7,
     ID_SET_RESOURCE = ID_USER_PACKET_ENUM+8,
     ID_END_TURN_SYNCHRONIZE = ID_USER_PACKET_ENUM+9,
+    ID_TRANSFER_MINERAL_TILE = ID_USER_PACKET_ENUM+10,
+    ID_SET_BUILDING_OWNER = ID_USER_PACKET_ENUM+11,
 };
 
 enum ResourceId{
@@ -57,6 +58,22 @@ enum ResourceId{
     RESOURCE_FOOD,
     RESOURCE_OIL,
     RESOURCE_SILVER
+};
+
+enum PlayerColorId{
+    PLAYER_NONE = -1,
+    PLAYER_RED,
+    PLAYER_GREEN,
+    PLAYER_BLUE,
+    PLAYER_YELLOW,
+    PLAYER_MAGENTA,
+    PLAYER_CYAN,
+    PLAYER_BLACK,
+    PLAYER_WHITE,
+};
+
+enum BuildingTypes{
+    BUILDING_MINER,
 };
 
 bool isPassable(float x, float y, float width, float height);
@@ -68,6 +85,7 @@ void addBuildingToList(Building *newBuilding);
 void loadMapArray();
 void saveMapArray();
 int findPlayer(RakNet::RakNetGUID senderGuid);
+int findBuilding(int posX, int posY);
 bool endTurn();
 void connectBuildings();
 
@@ -76,6 +94,8 @@ extern std::vector<Building*> buildingList;
 
 extern int mapArray[maxMapArrayWidth][maxMapArrayHeight];
 extern int mapArrayRotation[maxMapArrayWidth][maxMapArrayHeight];
+extern int mapArrayOwner[maxMapArrayWidth][maxMapArrayHeight];
+extern int buildingIndex[maxMapArrayWidth][maxMapArrayHeight];
 extern int mineralArray[maxMapArrayWidth][maxMapArrayHeight][maxMineralDepth][2]; ///mineralArray[x][y][Depth][0 - Type --- 1 - Quantity]
 
 extern RakNet::RakPeerInterface *rakPeer;

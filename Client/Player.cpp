@@ -49,6 +49,10 @@ std::string Player::getPlayerName(){
     return this->playerName;
 }
 
+bool Player::getPlayerTurn(){
+    return this->endTurn;
+}
+
 int Player::getPlayerResource(int resourceEnum){
     if(resourceEnum == RESOURCE_METAL){
         return this->metalResource;

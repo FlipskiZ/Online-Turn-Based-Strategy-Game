@@ -14,16 +14,25 @@ void Engine::init(const char* title){
     port = 0, maxPlayers = 0;
     serverCommand.clear();
 
-    mapArrayWidth = maxMapArrayWidth;
-    mapArrayHeight = maxMapArrayHeight;
+    mapArrayWidth = 50;
+    mapArrayHeight = 25;
 
     for(int x = 0; x < mapArrayWidth; x++){
         for(int y = 0; y < mapArrayHeight; y++){
-            mapArrayRotation[x][y] = 0;
             mapArray[x][y] = 0;
+            mapArrayRotation[x][y] = 0;
             for(int z = 0; z < maxMineralDepth; z++){
                 mineralArray[x][y][z][0] = 0;
                 mineralArray[x][y][z][1] = 0;
+            }
+            buildingIndex[x][y] = -1;
+            mapArrayOwner[x][y] = -1;
+            if(rand()%50 == 0){
+                Building *newBuilding = new Building();
+                newBuilding->setBuildingPos(x, y);
+                newBuilding->setBuildingType(BUILDING_MINER);
+                newBuilding->setBuildingOwner(-1);
+                addBuildingToList(newBuilding);
             }
         }
     }

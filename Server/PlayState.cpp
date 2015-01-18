@@ -29,7 +29,8 @@ void PlayState::init(){
     //loadMapArray();
     for(int x = 0; x < mapArrayWidth; x++){
         for(int y = 0; y < mapArrayHeight; y++){
-            mapArray[x][y] = 11+rand()%4;
+            mineralArray[x][y][0][0] = rand()%4;    ///Type
+            mineralArray[x][y][0][1] = 1000;        ///Quantity
         }
     }
 }
@@ -62,7 +63,7 @@ void PlayState::update(Engine* engine){
                 break;
 
             case ID_CONNECTED_MESSAGE:{
-                    int playerId;
+                    int playerId, metalResource = START_METAL, foodResource = START_FOOD, oilResource = START_OIL, silverResource = START_SILVER;
                     RakNet::RakString rakString;
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
@@ -72,6 +73,8 @@ void PlayState::update(Engine* engine){
                     Player *newPlayer = new Player();
                     newPlayer->setPlayerName(rakString.C_String());
                     newPlayer->setPlayerGuid(rakPacket->guid);
+                    newPlayer->setPlayerResources(metalResource, foodResource, oilResource, silverResource);
+                    newPlayer->setPlayerFirst(true);
                     playerId = addPlayerToList(newPlayer);
 
                     RakNet::BitStream bitStreamOUT;
@@ -93,7 +96,25 @@ void PlayState::update(Engine* engine){
                             bitStreamOUT.Write(y);
                             bitStreamOUT.Write(mapArray[x][y]);
                             rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
+
+                            bitStreamOUT.Reset();
+                            bitStreamOUT.Write((RakNet::MessageID)ID_TRANSFER_MINERAL_TILE);
+                            bitStreamOUT.Write(x);
+                            bitStreamOUT.Write(y);
+                            bitStreamOUT.Write(mineralArray[x][y][0][0]);
+                            bitStreamOUT.Write(mineralArray[x][y][0][1]);
+                            rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
                         }
+                    }
+                    for(int i = 0; i < buildingList.size(); i++){
+                        RakNet::BitStream bitStreamOUT;
+                        bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
+                        bitStreamOUT.Write(buildingList[i]->getBuildingOwner());
+                        bitStreamOUT.Write(buildingList[i]->getBuildingPosX());
+                        bitStreamOUT.Write(buildingList[i]->getBuildingPosY());
+                        bitStreamOUT.Write(buildingList[i]->getBuildingType());
+                        bitStreamOUT.Write(buildingList[i]->getBuildingCapital());
+                        rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
                     }
                     for(int i = 0; playerList[i] != NULL; i++){
                         if(i != playerId){
@@ -122,22 +143,19 @@ void PlayState::update(Engine* engine){
                     bitStreamOUT.Write(playerList[playerId]->getPlayerName());
 
                     rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
-                    {
-                        int posX, posY, playerId;
-                        for(int i = 0; i < buildingList.size(); i++){
-                            posX = buildingList[i]->getBuildingPosX();
-                            posY = buildingList[i]->getBuildingPosY();
-                            playerId = buildingList[i]->getBuildingOwner();
 
-                            bitStreamOUT.Reset();
-                            bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
-                            bitStreamOUT.Write(playerId);
-                            bitStreamOUT.Write(posX);
-                            bitStreamOUT.Write(posY);
-                            bitStreamOUT.Write(0);///Building Type
-                            rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
-                        }
-                    }
+                    bitStreamOUT.Reset();
+                    bitStreamOUT.Write((RakNet::MessageID)ID_SET_RESOURCE);
+                    bitStreamOUT.Write(4);
+                    bitStreamOUT.Write(RESOURCE_METAL);
+                    bitStreamOUT.Write(playerList[playerId]->getPlayerResource(RESOURCE_METAL));
+                    bitStreamOUT.Write(RESOURCE_FOOD);
+                    bitStreamOUT.Write(playerList[playerId]->getPlayerResource(RESOURCE_FOOD));
+                    bitStreamOUT.Write(RESOURCE_OIL);
+                    bitStreamOUT.Write(playerList[playerId]->getPlayerResource(RESOURCE_OIL));
+                    bitStreamOUT.Write(RESOURCE_SILVER);
+                    bitStreamOUT.Write(playerList[playerId]->getPlayerResource(RESOURCE_SILVER));
+                    rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, rakPacket->systemAddress, false);
                 }break;
 
             case ID_CHAT_MESSAGE:{
@@ -157,31 +175,158 @@ void PlayState::update(Engine* engine){
 
             case ID_PLACE_BUILDING:{
                     int playerId = findPlayer(rakPacket->guid);
-                    int posX, posY;
+                    int posX, posY, buildingType = BUILDING_MINER;
+                    bool allowedToPlace = false, capitalBuilding = playerList[playerId]->getPlayerFirst(), besideUnowned = false;
 
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
                     bitStreamIN.Read(posX);
                     bitStreamIN.Read(posY);
+                    if(!capitalBuilding){
+                        if(findBuilding(posX-1, posY) > -1){
+                            if(buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() == playerId){
+                                allowedToPlace = true;
+                            }
+                        }if(findBuilding(posX+1, posY) > -1){
+                            if(buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() == playerId){
+                                allowedToPlace = true;
+                            }
+                        }if(findBuilding(posX, posY-1) > -1){
+                            if(buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() == playerId){
+                                allowedToPlace = true;
+                            }
+                        }if(findBuilding(posX, posY+1) > -1){
+                            if(buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() == playerId){
+                                allowedToPlace = true;
+                            }
+                        }
+                        if(findBuilding(posX, posY) > -1){
+                            allowedToPlace = false;
+                        }if(findBuilding(posX-1, posY) > -1){
+                            if(buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() != playerId && buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() != -1){
+                                allowedToPlace = false;
+                            }
+                        }if(findBuilding(posX+1, posY) > -1){
+                            if(buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() != playerId && buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() != -1){
+                                allowedToPlace = false;
+                            }
+                        }if(findBuilding(posX, posY-1) > -1){
+                            if(buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() != playerId && buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() != -1){
+                                allowedToPlace = false;
+                            }
+                        }if(findBuilding(posX, posY+1) > -1){
+                            if(buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() != playerId && buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() != -1){
+                                allowedToPlace = false;
+                            }
+                        }
+                    }else{
+                        allowedToPlace = true;
 
-                    Building *newBuilding = new Building();
-                    newBuilding->setBuildingPos(posX, posY);
-                    newBuilding->setBuildingType(0);
-                    newBuilding->setBuildingOwner(playerId);
-                    addBuildingToList(newBuilding);
+                        if(findBuilding(posX, posY) > -1){
+                            allowedToPlace = false;
+                        }if(findBuilding(posX-1, posY) > -1){
+                            if(buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() != -1){
+                                allowedToPlace = false;
+                            }
+                        }if(findBuilding(posX+1, posY) > -1){
+                            if(buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() != -1){
+                                allowedToPlace = false;
+                            }
+                        }if(findBuilding(posX, posY-1) > -1){
+                            if(buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() != -1){
+                                allowedToPlace = false;
+                            }
+                        }if(findBuilding(posX, posY+1) > -1){
+                            if(buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() != -1){
+                                allowedToPlace = false;
+                            }
+                        }
+                    }
 
-                    RakNet::BitStream bitStreamOUT;
-                    bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
-                    bitStreamOUT.Write(playerId);
-                    bitStreamOUT.Write(posX);
-                    bitStreamOUT.Write(posY);
-                    bitStreamOUT.Write(0);///Building Type
-                    rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+                    if(posX < 0 || posX >= mapArrayWidth || posY < 0 || posY >= mapArrayHeight)
+                        allowedToPlace = false;
+
+                    if(allowedToPlace){
+                        if(findBuilding(posX-1, posY) > -1){
+                            if(buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() == -1){
+                                besideUnowned = true;
+                            }
+                        }else if(findBuilding(posX+1, posY) > -1){
+                            if(buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() == -1){
+                                besideUnowned = true;
+                            }
+                        }else if(findBuilding(posX, posY-1) > -1){
+                            if(buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() == -1){
+                                besideUnowned = true;
+                            }
+                        }else if(findBuilding(posX, posY+1) > -1){
+                            if(buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() == -1){
+                                besideUnowned = true;
+                            }
+                        }
+                    }
+
+                    if(allowedToPlace){
+                        int playerMetal = playerList[playerId]->getPlayerResource(RESOURCE_METAL);
+                        int playerFood = playerList[playerId]->getPlayerResource(RESOURCE_FOOD);
+                        int playerOil = playerList[playerId]->getPlayerResource(RESOURCE_OIL);
+                        int playerSilver = playerList[playerId]->getPlayerResource(RESOURCE_SILVER);
+
+                        if(playerMetal >= 10 && playerFood >= 10 && playerOil >= 10 && playerSilver >= 10){
+                            playerList[playerId]->changePlayerResource(RESOURCE_METAL, -10);
+                            playerList[playerId]->changePlayerResource(RESOURCE_FOOD, -10);
+                            playerList[playerId]->changePlayerResource(RESOURCE_OIL, -10);
+                            playerList[playerId]->changePlayerResource(RESOURCE_SILVER, -10);
+
+                            RakNet::BitStream bitStreamOUT;
+                            bitStreamOUT.Write((RakNet::MessageID)ID_SET_RESOURCE);
+                            bitStreamOUT.Write(4);
+                            bitStreamOUT.Write(RESOURCE_METAL);
+                            bitStreamOUT.Write(playerList[playerId]->getPlayerResource(RESOURCE_METAL));
+                            bitStreamOUT.Write(RESOURCE_FOOD);
+                            bitStreamOUT.Write(playerList[playerId]->getPlayerResource(RESOURCE_FOOD));
+                            bitStreamOUT.Write(RESOURCE_OIL);
+                            bitStreamOUT.Write(playerList[playerId]->getPlayerResource(RESOURCE_OIL));
+                            bitStreamOUT.Write(RESOURCE_SILVER);
+                            bitStreamOUT.Write(playerList[playerId]->getPlayerResource(RESOURCE_SILVER));
+                            rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, rakPacket->systemAddress, false);
+                        }else{
+                            allowedToPlace = false;
+                        }
+                    }
+
+                    if(allowedToPlace){
+                        RakNet::BitStream bitStreamOUT;
+                        bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
+                        bitStreamOUT.Write(playerId);
+                        bitStreamOUT.Write(posX);
+                        bitStreamOUT.Write(posY);
+                        bitStreamOUT.Write(buildingType);///Building Type
+                        bitStreamOUT.Write(capitalBuilding);
+                        rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+
+                        Building *newBuilding = new Building();
+                        newBuilding->setBuildingPos(posX, posY);
+                        newBuilding->setBuildingType(buildingType);
+                        newBuilding->setBuildingOwner(playerId);
+                        if(capitalBuilding){
+                            newBuilding->setBuildingCapital(capitalBuilding);
+                            playerList[playerId]->setPlayerFirst(false);
+                        }
+                        addBuildingToList(newBuilding);
+
+                        if(besideUnowned)
+                            connectBuildings();
+
+                        printf("%s Placed%sbuilding at X: %d - Y: %d%s\n", playerList[playerId]->getPlayerName().c_str(), (capitalBuilding) ? " capital" : " ", posX, posY, (besideUnowned) ? " - And it was beside an unowned building" : "");
+                    }else{
+                        printf("%s Tried to place building at X: %d - Y: %d\n", playerList[playerId]->getPlayerName().c_str(), posX, posY);
+                    }
                 }break;
 
             case ID_END_TURN:{
                     int playerId = findPlayer(rakPacket->guid);
-                    bool endTurnSetting;
+                    bool endTurnSetting = false;
 
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
@@ -195,6 +340,8 @@ void PlayState::update(Engine* engine){
                     bitStreamOUT.Write(endTurnSetting);
                     rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 
+                    printf("%s has ended his turn\n", playerList[playerId]->getPlayerName().c_str());
+
                     if(endTurn()){
                         RakNet::BitStream bitStreamOUT;
 
@@ -206,8 +353,8 @@ void PlayState::update(Engine* engine){
                                 bitStreamOUT.Write(playerList[i]->getPlayerResource(RESOURCE_FOOD));
                                 bitStreamOUT.Write(playerList[i]->getPlayerResource(RESOURCE_OIL));
                                 bitStreamOUT.Write(playerList[i]->getPlayerResource(RESOURCE_SILVER));
-                                rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPacket->systemAddress, false);
-
+                                rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPeer->GetSystemAddressFromGuid(playerList[i]->playerGuid), false);
+                                printf("NEXT TURN\n");
                             }
                         }
                     }

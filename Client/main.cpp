@@ -17,9 +17,11 @@ void addParticleToList(ParticleEntity *newParticle);
 void addBuildingToList(Building *newBuilding);
 void loadMapArray();
 void saveMapArray();
+int findBuilding(int posX, int posY);
 void drawMap();
-void drawTile(float x, float y, int tileId);
+void drawTile(float x, float y, int mapOffsetX, int mapOffsetY);
 void updateCamera();
+bool visibleInCamera(float posX, float posY, float width, float height);
 
 ALLEGRO_DISPLAY *display;
 
@@ -53,6 +55,7 @@ Engine engine;
 
 int mapArray[maxMapArrayWidth][maxMapArrayHeight];
 int mapArrayRotation[maxMapArrayWidth][maxMapArrayHeight];
+int buildingIndex[maxMapArrayWidth][maxMapArrayHeight];
 int mineralArray[maxMapArrayWidth][maxMapArrayHeight][maxMineralDepth][2];  ///mineralArray[x][y][Depth][0 - Type --- 1 - Quantity]
 
 const char* versionNumber;
@@ -61,7 +64,7 @@ float fpsTimeNew, fpsCounter, fpsTimeOld;
 float cameraPosX, cameraPosY, cameraOffsetX, cameraOffsetY, mapDisplayOffsetX, mapDisplayOffsetY, cameraMoveSpeed;
 bool drawScreen, timerEvent, done, mouseButtonLeft, mouseButtonLeftClick, mouseButtonRight, mouseButtonRightClick, inGame, allegroWrite;
 float mouseX, mouseY, volumeLevel;
-int lastKeyPress, mouseWheel = 0, mouseWheelChange;
+int lastKeyPress, mouseWheel, mouseWheelChange;
 
 int mapArrayWidth, mapArrayHeight;
 
@@ -126,7 +129,7 @@ int main(){
 
         if(events.type == ALLEGRO_EVENT_KEY_CHAR && allegroWrite){
             int unichar = events.keyboard.unichar;
-            if(events.keyboard.keycode != ALLEGRO_KEY_BACKSPACE && events.keyboard.keycode != ALLEGRO_KEY_ENTER && events.keyboard.keycode < 90){
+            if(events.keyboard.keycode != ALLEGRO_KEY_BACKSPACE && events.keyboard.keycode != ALLEGRO_KEY_ENTER && events.keyboard.keycode < 90 && (events.keyboard.keycode > 85 || events.keyboard.keycode < 76) && (events.keyboard.keycode > 59 || events.keyboard.keycode < 47) && events.keyboard.keycode != ALLEGRO_KEY_BACKSLASH && events.keyboard.keycode != ALLEGRO_KEY_BACKSLASH2){
                 allegroString.push_back(unichar);
             }else if(events.keyboard.keycode == ALLEGRO_KEY_BACKSPACE && allegroString.size() > 0){
                 allegroString.erase(allegroString.size()-1, 1);
@@ -264,32 +267,22 @@ void addParticleToList(ParticleEntity *newParticle){
     }
 }
 
+void addBuildingToList(Building *newBuilding){
+    buildingIndex[newBuilding->getBuildingPosX()][newBuilding->getBuildingPosY()] = buildingList.size();
+    newBuilding->setBuildingId(buildingList.size());
+    buildingList.push_back(newBuilding);
+}
+
 void loadMapArray(){
-    std::ifstream mapArrayFile;
-    mapArrayFile.open("config/MapArray.txt");
-
-    for(int y = 0; y < mapArrayHeight; y++){
+    /*for(int y = 0; y < mapArrayHeight; y++){
         for(int x = 0; x < mapArrayWidth; x++){
-            mapArrayFile >> mapArray[x][y];
-
-            if(mapArray[x][y] != 2 && mapArray[x][y] != 6){
-                if(mapArray[x][y] == 0){
-                    mapArray[x][y] = ((rand()%200 == 0) ? 8 : 0) + rand()%2;
-                    mapArrayRotation[x][y] = rand()%4;
-                }else if(mapArray[x][y] == 4){
-                    mapArray[x][y] = 4+rand()%2;
-                    mapArrayRotation[x][y] = rand()%2*2;
-
-                }else if(mapArray[x][y] == 3 || mapArray[x][y] == 7){
-                    if(mapArray[x][y] == 3 && rand()%5 == 0)
-                        mapArray[x][y] = 10;
-                    mapArrayRotation[x][y] = rand()%4;
-                }
-            }
+            mapArray[x][y] = rand()%2;
+            mapArrayRotation[x][y] = 0;
+            mineralArray[x][y][0][0] = rand()%4;
+            mineralArray[x][y][0][1] = 1;
+            buildingIndex[x][y] = -1;
         }
-    }
-
-    mapArrayFile.close();
+    }*/
 }
 
 void saveMapArray(){
@@ -301,51 +294,57 @@ void saveMapArray(){
     }
 }
 
+int findBuilding(int posX, int posY){
+    return buildingIndex[posX][posY];
+}
+
 void drawMap(){
     for(int x = 0; x < screenWidth/tileSize+1; x++){
-        for(int y = 0; y < screenHeight/tileSize+1; y++){
+        for(int y = 0; y < screenHeight/tileSize+2; y++){///The +1 and +2 are for the camera to prevent blacks spots on the sides of the screen
             int mapOffsetX = cameraPosX/tileSize, mapOffsetY = cameraPosY/tileSize;
-            if(y+mapOffsetY >= 0 && y+mapOffsetY < mapArrayHeight)
-                drawTile(x+mapDisplayOffsetX/tileSize, y+mapDisplayOffsetY/tileSize, mapArray[x+mapOffsetX][y+mapOffsetY]);
+            if(x+mapOffsetX >= 0 && x+mapOffsetX < mapArrayWidth && y+mapOffsetY >= 0 && y+mapOffsetY < mapArrayHeight){///Not to draw out of bonds in order to not waste resources and to not draw out of bounds
+                drawTile(x+mapDisplayOffsetX/tileSize, y+mapDisplayOffsetY/tileSize, mapOffsetX, mapOffsetY);
+            }
         }
     }
 }
 
-void drawTile(float x, float y, int tileId){
-    switch(tileId){
+void drawTile(float x, float y, int mapOffsetX, int mapOffsetY){
+    int arrayX = x-mapDisplayOffsetX/tileSize, arrayY = y-mapDisplayOffsetY/tileSize;
+    switch(mapArray[arrayX+mapOffsetX][arrayY+mapOffsetY]){
         case 0:
-            al_draw_rotated_bitmap(groundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
+            al_draw_bitmap(groundImage1, x*tileSize, y*tileSize, NULL);
             break;
 
         case 1:
-            al_draw_rotated_bitmap(groundImage2, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
+            al_draw_bitmap(groundImage2, x*tileSize, y*tileSize, NULL);
             break;
+    }
 
-        case 11:
-            al_draw_rotated_bitmap(groundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
-            al_draw_bitmap(foodResourceImage, x*tileSize, y*tileSize, NULL);
-            break;
+    if(mineralArray[arrayX+mapOffsetX][arrayY+mapOffsetY][0][1] > 0){///If there are minerals on the ground level
+        switch(mineralArray[arrayX+mapOffsetX][arrayY+mapOffsetY][0][0]){///Draw the mineral on the ground level
+            case 0:
+                al_draw_bitmap(metalResourceImage, x*tileSize, y*tileSize, NULL);
+                break;
 
-        case 12:
-            al_draw_rotated_bitmap(groundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
-            al_draw_bitmap(oilResourceImage, x*tileSize, y*tileSize, NULL);
-            break;
+            case 1:
+                al_draw_bitmap(foodResourceImage, x*tileSize, y*tileSize, NULL);
+                break;
 
-        case 13:
-            al_draw_rotated_bitmap(groundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
-            al_draw_bitmap(metalResourceImage, x*tileSize, y*tileSize, NULL);
-            break;
+            case 2:
+                al_draw_bitmap(oilResourceImage, x*tileSize, y*tileSize, NULL);
+                break;
 
-        case 14:
-            al_draw_rotated_bitmap(groundImage1, tileSize/2, tileSize/2, x*tileSize+tileSize/2, y*tileSize+tileSize/2, mapArrayRotation[(int)x][(int)y]*90*toRadians, NULL);
-            al_draw_bitmap(silverResourceImage, x*tileSize, y*tileSize, NULL);
-            break;
+            case 3:
+                al_draw_bitmap(silverResourceImage, x*tileSize, y*tileSize, NULL);
+                break;
+        }
     }
 }
 
 void updateCamera(){
-    if(cameraPosX < 0){
-        cameraPosX = 0;
+    if(cameraPosX < -leftGuiWidth){
+        cameraPosX = -leftGuiWidth;
     }
     if(cameraPosX + mapDisplayWidth >= mapArrayWidth*tileSize){
         cameraPosX = mapArrayWidth*tileSize - mapDisplayWidth;
@@ -357,16 +356,16 @@ void updateCamera(){
         cameraPosY = mapArrayHeight*tileSize - botGuiHeight;
     }
 
-    int cX = cameraPosX, cY = cameraPosY;
-
-    mapDisplayOffsetX = -(cX%tileSize);
-    mapDisplayOffsetY = -(cY%tileSize);
+    mapDisplayOffsetX = -((int)cameraPosX%tileSize);
+    mapDisplayOffsetY = -((int)cameraPosY%tileSize);
 
     cameraOffsetX = -cameraPosX;
     cameraOffsetY = -cameraPosY;
 }
 
-void addBuildingToList(Building *newBuilding){
-    newBuilding->setBuildingId(buildingList.size());
-    buildingList.push_back(newBuilding);
+bool visibleInCamera(float posX, float posY, float width, float height){
+    if(posX+width+cameraOffsetX < 0 && posX+cameraOffsetX >= screenWidth && posY+height+cameraOffsetY < 0 && posY+cameraOffsetX >= screenHeight){
+        return false;
+    }
+    return true;
 }

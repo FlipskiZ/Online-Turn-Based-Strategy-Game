@@ -5,7 +5,7 @@
 Player::Player(){
     this->playerId = 0;
     this->playerName.clear();
-    this->endTurn = false;
+    this->endTurn = false, this->firstBuilding = false;
     this->metalResource = 0, this->foodResource = 0, this->oilResource = 0, this->silverResource = 0;
 }
 
@@ -23,6 +23,10 @@ void Player::setPlayerName(const char* playerName){
 
 void Player::setPlayerTurn(bool endTurn){
     this->endTurn = endTurn;
+}
+
+void Player::setPlayerFirst(bool first){
+    this->firstBuilding = first;
 }
 
 void Player::setPlayerResources(int metalResource, int foodResource, int oilResource, int silverResource){
@@ -56,6 +60,10 @@ bool Player::getPlayerTurn(){
     return this->endTurn;
 }
 
+bool Player::getPlayerFirst(){
+    return this->firstBuilding;
+}
+
 int Player::getPlayerResource(int resourceEnum){
     if(resourceEnum == RESOURCE_METAL){
         return this->metalResource;
@@ -70,30 +78,57 @@ int Player::getPlayerResource(int resourceEnum){
 
 void Player::endPlayerTurn(){
     int posX, posY;
+    bool minedMinerals = false;
 
     this->endTurn = false;
 
     for(int i = 0; i < buildingList.size(); i++){
         if(buildingList[i]->getBuildingOwner() == this->playerId){
-            posX = buildingList[i]->getBuildingPosX(), posY = buildingList[i]->getBuildingPosY();
-            if(buildingList[i]->getBuildingType() == 0){
-                if(mineralArray[posX][posY][0][1] == RESOURCE_METAL && mineralArray[posX][posY][0][2] > 0){
-                    mineralArray[posX][posY][0][2] -= 10;
+            if(buildingList[i]->getBuildingType() == BUILDING_MINER){
+                posX = buildingList[i]->getBuildingPosX(), posY = buildingList[i]->getBuildingPosY();
+                if(mineralArray[posX][posY][0][0] == RESOURCE_METAL && mineralArray[posX][posY][0][1] > 0){
+                    mineralArray[posX][posY][0][1] -= 10;
                     this->changePlayerResource(RESOURCE_METAL, 10);
+                    minedMinerals = true;
 
-                }else if(mineralArray[posX][posY][0][1] == RESOURCE_FOOD && mineralArray[posX][posY][0][2] > 0){
-                    mineralArray[posX][posY][0][2] -= 10;
+                }else if(mineralArray[posX][posY][0][0] == RESOURCE_FOOD && mineralArray[posX][posY][0][1] > 0){
+                    mineralArray[posX][posY][0][1] -= 10;
                     this->changePlayerResource(RESOURCE_FOOD, 10);
+                    minedMinerals = true;
 
-                }else if(mineralArray[posX][posY][0][1] == RESOURCE_OIL && mineralArray[posX][posY][0][2] > 0){
-                    mineralArray[posX][posY][0][2] -= 10;
+                }else if(mineralArray[posX][posY][0][0] == RESOURCE_OIL && mineralArray[posX][posY][0][1] > 0){
+                    mineralArray[posX][posY][0][1] -= 10;
                     this->changePlayerResource(RESOURCE_OIL, 10);
+                    minedMinerals = true;
 
-                }else if(mineralArray[posX][posY][0][1] == RESOURCE_SILVER && mineralArray[posX][posY][0][2] > 0){
-                    mineralArray[posX][posY][0][2] -= 10;
+                }else if(mineralArray[posX][posY][0][0] == RESOURCE_SILVER && mineralArray[posX][posY][0][1] > 0){
+                    mineralArray[posX][posY][0][1] -= 10;
                     this->changePlayerResource(RESOURCE_SILVER, 10);
+                    minedMinerals = true;
                 }
             }
         }
     }
+
+    RakNet::BitStream bitStreamOUT;
+    if(minedMinerals){
+        bitStreamOUT.Write((RakNet::MessageID)ID_TRANSFER_MINERAL_TILE);
+        bitStreamOUT.Write(posX);
+        bitStreamOUT.Write(posY);
+        bitStreamOUT.Write(mineralArray[posX][posY][0][0]);
+        bitStreamOUT.Write(mineralArray[posX][posY][0][1]);
+        rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, rakPeer->GetSystemAddressFromGuid(this->playerGuid), true);
+
+        bitStreamOUT.Reset();
+        bitStreamOUT.Write((RakNet::MessageID)ID_SET_RESOURCE);
+        bitStreamOUT.Write(1);
+        bitStreamOUT.Write(mineralArray[posX][posY][0][0]);
+        bitStreamOUT.Write(this->getPlayerResource(mineralArray[posX][posY][0][0]));
+        rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+    }
+    bitStreamOUT.Reset();
+    bitStreamOUT.Write((RakNet::MessageID)ID_END_TURN);
+    bitStreamOUT.Write(this->playerId);
+    bitStreamOUT.Write(this->endTurn);
+    rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
 }

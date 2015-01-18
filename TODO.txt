@@ -1,0 +1,10 @@
+High Priority:
+	Eventual bugs, glitches and crashes.
+	
+Medium Priority:
+	Develop more UI elements to show more information to the player
+	Add features that use more of the implemented functionality.
+
+Low Priority:
+	Fix disconnecting
+	Get LAN to work
