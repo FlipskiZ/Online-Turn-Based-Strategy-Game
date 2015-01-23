@@ -35,11 +35,12 @@
 #define screenHeight 720
 
 #define mapDisplayWidth 1280
-#define mapDisplayHeight 560
+#define mapDisplayHeight 528
 
-#define topGuiHeight 32
-#define botGuiHeight 592//mapDisplayHeight+topGuiHeight
+#define topGuiHeight 64
+#define botGuiHeight 594//mapDisplayHeight+topGuiHeight
 #define leftGuiWidth 64
+#define rightGuiWidth 1280//mapDisplayWidth+leftGuiWidth
 
 #define maxMapArrayWidth 400
 #define maxMapArrayHeight 200
@@ -109,7 +110,17 @@ enum PlayerColorId{
 };
 
 enum BuildingTypes{
+    BUILDING_CAPITAL,
+    BUILDING_CONNECTOR,
     BUILDING_MINER,
+    BUILDING_WEAPON,
+};
+
+enum BuildingPropertyTypes{
+    BUILDING_METAL_COST,
+    BUILDING_FOOD_COST,
+    BUILDING_OIL_COST,
+    BUILDING_SILVER_COST,
 };
 
 bool isPassable(float x, float y, float width, float height);
@@ -126,6 +137,7 @@ void drawMap();
 void drawTile(float x, float y, int mapOffsetX, int mapOffsetY);
 void updateCamera();
 bool visibleInCamera(float posX, float posY, float width, float height);
+int getBuildingProperty(int buildingType, int buildingPropertyId);
 
 extern ALLEGRO_DISPLAY *display;
 
@@ -141,6 +153,8 @@ extern ALLEGRO_BITMAP *foodResourceImage;
 extern ALLEGRO_BITMAP *oilResourceImage;
 extern ALLEGRO_BITMAP *metalResourceImage;
 extern ALLEGRO_BITMAP *silverResourceImage;
+extern ALLEGRO_BITMAP *capitalBuildingImage;
+extern ALLEGRO_BITMAP *connectorBuildingImage;
 extern ALLEGRO_BITMAP *minerBuildingImage;
 
 extern ALLEGRO_KEYBOARD_STATE keyState;
@@ -166,6 +180,7 @@ extern float cameraPosX, cameraPosY, cameraOffsetX, cameraOffsetY, mapDisplayOff
 extern bool drawScreen, timerEvent, done, mouseButtonLeft, mouseButtonLeftClick, mouseButtonRight, mouseButtonRightClick, inGame, allegroWrite;
 extern float mouseX, mouseY;
 extern int lastKeyPress, mouseWheel, mouseWheelChange;
+extern int selectedBuildingId;
 
 extern std::string allegroString;
 

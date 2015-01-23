@@ -27,16 +27,8 @@ void Engine::init(const char* title){
             }
             buildingIndex[x][y] = -1;
             mapArrayOwner[x][y] = -1;
-            if(rand()%50 == 0){
-                Building *newBuilding = new Building();
-                newBuilding->setBuildingPos(x, y);
-                newBuilding->setBuildingType(BUILDING_MINER);
-                newBuilding->setBuildingOwner(-1);
-                addBuildingToList(newBuilding);
-            }
         }
     }
-
     //loadMapArray();
 }
 

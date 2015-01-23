@@ -8,6 +8,13 @@ struct TILE_TYPE{
 	bool isPassable;
 };
 
+struct BUILDING_PROPERTIES{
+	int metalCost;
+	int foodCost;
+	int oilCost;
+	int silverCost;
+};
+
 bool isPassable(float x, float y, float width, float height, float deltaX, float deltaY);
 bool checkCollision(float x, float y, float ex, float ey, float width, float height, float ewidth, float eheight);
 bool insideMap(float x, float y, float width, float height);
@@ -22,6 +29,7 @@ void drawMap();
 void drawTile(float x, float y, int mapOffsetX, int mapOffsetY);
 void updateCamera();
 bool visibleInCamera(float posX, float posY, float width, float height);
+int getBuildingProperty(int buildingType, int buildingPropertyId);
 
 ALLEGRO_DISPLAY *display;
 
@@ -38,6 +46,8 @@ ALLEGRO_BITMAP *foodResourceImage;
 ALLEGRO_BITMAP *oilResourceImage;
 ALLEGRO_BITMAP *metalResourceImage;
 ALLEGRO_BITMAP *silverResourceImage;
+ALLEGRO_BITMAP *capitalBuildingImage;
+ALLEGRO_BITMAP *connectorBuildingImage;
 ALLEGRO_BITMAP *minerBuildingImage;
 
 ALLEGRO_KEYBOARD_STATE keyState;
@@ -65,6 +75,7 @@ float cameraPosX, cameraPosY, cameraOffsetX, cameraOffsetY, mapDisplayOffsetX, m
 bool drawScreen, timerEvent, done, mouseButtonLeft, mouseButtonLeftClick, mouseButtonRight, mouseButtonRightClick, inGame, allegroWrite;
 float mouseX, mouseY, volumeLevel;
 int lastKeyPress, mouseWheel, mouseWheelChange;
+int selectedBuildingId;
 
 int mapArrayWidth, mapArrayHeight;
 
@@ -90,6 +101,13 @@ TILE_TYPE tileIndex[] = {
 	{true}, // (8) TILE_BLOODGROUND1
 	{true}, // (9) TILE_BLOODGROUND2
 	{false}, // (10) TILE_VINEWALL
+};
+
+BUILDING_PROPERTIES buildingProperties[] = {
+	{0, 0, 0, 0}, // (0) BUILDING_CAPITAL
+	{10, 5, 5, 5}, // (1) BUILDING_CONNECTOR
+	{10, 10, 20, 10}, // (2) BUILDING_MINER
+	{15, 20, 30, 15}, // (3) BUILDING_WEAPON
 };
 //Initalization -
 
@@ -368,4 +386,16 @@ bool visibleInCamera(float posX, float posY, float width, float height){
         return false;
     }
     return true;
+}
+
+int getBuildingProperty(int buildingType, int buildingPropertyId){
+    if(buildingPropertyId == BUILDING_METAL_COST){
+        return buildingProperties[buildingType].metalCost;
+    }else if(buildingPropertyId == BUILDING_FOOD_COST){
+        return buildingProperties[buildingType].foodCost;
+    }else if(buildingPropertyId == BUILDING_OIL_COST){
+        return buildingProperties[buildingType].oilCost;
+    }else if(buildingPropertyId == BUILDING_SILVER_COST){
+        return buildingProperties[buildingType].silverCost;
+    }
 }

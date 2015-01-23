@@ -10,14 +10,15 @@ This game doesn't represent the final game, and everything is subject to change.
 How to play:
 
 Camera movement: WASD
-Place a miner building: Left click
+Select building: 1-2
+Place a building: Left click
 End turn: Enter
 Send chat message: Enter when the chat box is selected
 
 There is no *End goal* currently. But you can fill out the entire board with buildings, which could be seen as the end goal.
-The first building you place is your capital, you can place this building anywhere as long as it's not beside an enemy building.
+The first building you place is your capital, you can place this building anywhere as long as it's not beside an enemy building. This building is also free.
 You can only place buildings beside buildings you already own.
 If you place a building beside an unowned building, it becomes your building.
-You start with 50 of each resource.
-It costs 10 of every resource to place a building.
-When everyone ends their turn, the next turn begins. At the end of each turn every building gives you 10 of the resource it is placed on.
+You start with some amount of each base resource.
+It costs resources to place buildings.
+When everyone ends their turn, the next turn begins. At the end of each turn every miner building gives you 10 of the resource it is placed on.

@@ -36,6 +36,8 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
     oilResourceImage = al_load_bitmap("graphics/oilResourceImage.png");
     metalResourceImage = al_load_bitmap("graphics/metalResourceImage.png");
     silverResourceImage = al_load_bitmap("graphics/silverResourceImage.png");
+    capitalBuildingImage = al_load_bitmap("graphics/capitalBuildingImage.png");
+    connectorBuildingImage = al_load_bitmap("graphics/connectorBuildingImage.png");
     minerBuildingImage = al_load_bitmap("graphics/minerBuildingImage.png");
 
     event_queue = al_create_event_queue();
@@ -71,6 +73,7 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
     drawScreen = false, timerEvent = false, done = false, mouseButtonLeft = false, mouseButtonLeftClick = false, mouseButtonRight = false, mouseButtonRightClick = false, inGame = false, allegroWrite = false;
     mouseX = 0, mouseY = 0;
     lastKeyPress = 0, mouseWheel = 0;
+    selectedBuildingId = 0;
 
     allegroString.clear();
 

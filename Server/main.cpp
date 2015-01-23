@@ -7,6 +7,13 @@ struct TILE_TYPE{
 	bool isPassable;
 };
 
+struct BUILDING_PROPERTIES{
+	int metalCost;
+	int foodCost;
+	int oilCost;
+	int silverCost;
+};
+
 bool isPassable(float x, float y, float width, float height, float deltaX, float deltaY);
 bool checkCollision(float x, float y, float ex, float ey, float width, float height, float ewidth, float eheight);
 bool insideMap(float x, float y, float width, float height);
@@ -19,6 +26,8 @@ int findPlayer(RakNet::RakNetGUID senderGuid);
 int findBuilding(int posX, int posY);
 bool endTurn();
 void connectBuildings();
+int canPlaceBuilding(int buildingType, int posX, int posY, int playerId);
+int getBuildingProperty(int buildingType, int buildingPropertyId);
 
 Player *playerList[MAX_PLAYERS];
 std::vector<Building*> buildingList;
@@ -57,6 +66,13 @@ TILE_TYPE tileIndex[] = {
 	{true}, // (8) TILE_BLOODGROUND1
 	{true}, // (9) TILE_BLOODGROUND2
 	{false}, // (10) TILE_VINEWALL
+};
+
+BUILDING_PROPERTIES buildingProperties[] = {
+	{0, 0, 0, 0}, // (0) BUILDING_CAPITAL
+	{10, 5, 5, 5}, // (1) BUILDING_CONNECTOR
+	{10, 10, 20, 10}, // (2) BUILDING_MINER
+	{15, 20, 30, 15}, // (3) BUILDING_WEAPON
 };
 //Initalization -
 
@@ -225,12 +241,12 @@ void connectBuildings(){
         }
     }
     for(int i = 0; i < buildingList.size(); i++){
-        if(!buildingList[i]->getBuildingCapital()){
+        if(buildingList[i]->getBuildingId() != 0){
             buildingList[i]->setBuildingOwner(-1);
         }
     }
     for(int i = 0; i < buildingList.size(); i++){
-        if(buildingList[i]->getBuildingCapital()){
+        if(buildingList[i]->getBuildingId() == 0){
             buildingList[i]->checkConnectedNeighbours();
         }
     }
@@ -248,5 +264,121 @@ void connectBuildings(){
                 }
             }
         }
+    }
+}
+
+int canPlaceBuilding(int buildingType, int posX, int posY, int playerId){
+    bool allowedToPlace = false, besideUnowned = false;
+
+    if(buildingType != BUILDING_CAPITAL){
+        if(findBuilding(posX-1, posY) > -1){
+            if(buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() == playerId){
+                allowedToPlace = true;
+            }
+        }if(findBuilding(posX+1, posY) > -1){
+            if(buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() == playerId){
+                allowedToPlace = true;
+            }
+        }if(findBuilding(posX, posY-1) > -1){
+            if(buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() == playerId){
+                allowedToPlace = true;
+            }
+        }if(findBuilding(posX, posY+1) > -1){
+            if(buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() == playerId){
+                allowedToPlace = true;
+            }
+        }
+        if(findBuilding(posX, posY) > -1){
+            allowedToPlace = false;
+        }if(findBuilding(posX-1, posY) > -1){
+            if(buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() != playerId && buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() != -1){
+                allowedToPlace = false;
+            }
+        }if(findBuilding(posX+1, posY) > -1){
+            if(buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() != playerId && buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() != -1){
+                allowedToPlace = false;
+            }
+        }if(findBuilding(posX, posY-1) > -1){
+            if(buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() != playerId && buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() != -1){
+                allowedToPlace = false;
+            }
+        }if(findBuilding(posX, posY+1) > -1){
+            if(buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() != playerId && buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() != -1){
+                allowedToPlace = false;
+            }
+        }
+    }else{
+        allowedToPlace = true;
+
+        if(findBuilding(posX, posY) > -1){
+            allowedToPlace = false;
+        }if(findBuilding(posX-1, posY) > -1){
+            if(buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() != -1){
+                allowedToPlace = false;
+            }
+        }if(findBuilding(posX+1, posY) > -1){
+            if(buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() != -1){
+                allowedToPlace = false;
+            }
+        }if(findBuilding(posX, posY-1) > -1){
+            if(buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() != -1){
+                allowedToPlace = false;
+            }
+        }if(findBuilding(posX, posY+1) > -1){
+            if(buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() != -1){
+                allowedToPlace = false;
+            }
+        }
+    }
+
+    if(posX < 0 || posX >= mapArrayWidth || posY < 0 || posY >= mapArrayHeight)
+        allowedToPlace = false;
+
+    if(allowedToPlace){
+        if(findBuilding(posX-1, posY) > -1){
+            if(buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() == -1){
+                besideUnowned = true;
+            }
+        }else if(findBuilding(posX+1, posY) > -1){
+            if(buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() == -1){
+                besideUnowned = true;
+            }
+        }else if(findBuilding(posX, posY-1) > -1){
+            if(buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() == -1){
+                besideUnowned = true;
+            }
+        }else if(findBuilding(posX, posY+1) > -1){
+            if(buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() == -1){
+                besideUnowned = true;
+            }
+        }
+    }
+
+    if(buildingType == BUILDING_MINER){
+        if(mineralArray[posX][posY][0][1] > 0){
+            allowedToPlace = true;
+        }else{
+            allowedToPlace = false;
+        }
+    }
+
+    if(allowedToPlace && !besideUnowned){
+        return 1;
+    }else if(allowedToPlace && besideUnowned){
+        return 2;
+    }else if(!allowedToPlace){
+        return 0;
+    }
+}
+
+int getBuildingProperty(int buildingType, int buildingPropertyId){
+    if(buildingPropertyId == BUILDING_METAL_COST){
+        return buildingProperties[buildingType].metalCost;
+    }else if(buildingPropertyId == BUILDING_FOOD_COST){
+        return buildingProperties[buildingType].foodCost;
+    }else if(buildingPropertyId == BUILDING_OIL_COST){
+        return buildingProperties[buildingType].oilCost;
+    }else if(buildingPropertyId == BUILDING_SILVER_COST){
+        return buildingProperties[buildingType].silverCost;
     }
 }

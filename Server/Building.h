@@ -9,21 +9,18 @@ class Building{
         void setBuildingId(int buildingId);
         void setBuildingType(int buildingType);
         void setBuildingOwner(int ownerId);
-        void setBuildingCapital(bool capital);
 
         int getBuildingPosX();
         int getBuildingPosY();
         int getBuildingId();
         int getBuildingType();
         int getBuildingOwner();
-        bool getBuildingCapital();
 
         void checkConnectedNeighbours();
     protected:
     private:
         int posX, posY;
         int buildingId, buildingType, ownerId;
-        bool capital;
 };
 
 #endif // BUILDING_H

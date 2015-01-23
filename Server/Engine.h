@@ -34,10 +34,10 @@
 
 #define FPS 60.0
 
-#define START_METAL 50
-#define START_FOOD 50
-#define START_OIL 50
-#define START_SILVER 50
+#define START_METAL 200
+#define START_FOOD 100
+#define START_OIL 200
+#define START_SILVER 100
 
 enum GameMessages{
     ID_CONNECTED_MESSAGE = ID_USER_PACKET_ENUM+1,
@@ -73,7 +73,17 @@ enum PlayerColorId{
 };
 
 enum BuildingTypes{
+    BUILDING_CAPITAL,
+    BUILDING_CONNECTOR,
     BUILDING_MINER,
+    BUILDING_WEAPON,
+};
+
+enum BuildingPropertyTypes{
+    BUILDING_METAL_COST,
+    BUILDING_FOOD_COST,
+    BUILDING_OIL_COST,
+    BUILDING_SILVER_COST,
 };
 
 bool isPassable(float x, float y, float width, float height);
@@ -88,6 +98,8 @@ int findPlayer(RakNet::RakNetGUID senderGuid);
 int findBuilding(int posX, int posY);
 bool endTurn();
 void connectBuildings();
+int canPlaceBuilding(int buildingType, int posX, int posY, int playerId);
+int getBuildingProperty(int buildingType, int buildingPropertyId);
 
 extern Player *playerList[MAX_PLAYERS];
 extern std::vector<Building*> buildingList;

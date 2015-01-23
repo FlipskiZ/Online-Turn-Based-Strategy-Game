@@ -32,6 +32,7 @@ void PlayState::init(){
     for(int i = 0; i < MAX_PARTICLES; i++){
         particleList[i] = NULL;
     }
+    buildingList.clear();
     //Pointer Lists -
     for(int i = 0; i < chatLogSize; i++){
         chatLog[i].clear();
@@ -181,7 +182,6 @@ void PlayState::update(Engine* engine){
             case ID_PLACE_BUILDING:{
                     int playerId;
                     int posX, posY, buildingType;
-                    bool capitalBuilding;
 
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
 
@@ -190,13 +190,11 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.Read(posX);
                     bitStreamIN.Read(posY);
                     bitStreamIN.Read(buildingType);
-                    bitStreamIN.Read(capitalBuilding);
 
                     Building *newBuilding = new Building();
                     newBuilding->setBuildingPos(posX, posY);
                     newBuilding->setBuildingType(buildingType);
                     newBuilding->setBuildingOwner(playerId);
-                    newBuilding->setBuildingCapital(capitalBuilding);
                     addBuildingToList(newBuilding);
             }break;
 
@@ -290,11 +288,13 @@ void PlayState::update(Engine* engine){
 
     if(mouseButtonLeftClick){
         int tX = floor((mouseX+cameraPosX)/tileSize), tY = floor((mouseY+cameraPosY)/tileSize);
+
         if(insideMap(tX, tY, 0, 0)){
             RakNet::BitStream bitStreamOUT;
             bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
             bitStreamOUT.Write(tX);
             bitStreamOUT.Write(tY);
+            bitStreamOUT.Write(selectedBuildingId);
             rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
         }
     }
@@ -336,6 +336,16 @@ void PlayState::update(Engine* engine){
                 rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
             }
             lastKeyPress = ALLEGRO_KEY_ENTER;
+        }
+    }else if(al_key_down(&keyState, ALLEGRO_KEY_1)){
+        if(lastKeyPress != ALLEGRO_KEY_1){
+            selectedBuildingId = BUILDING_CONNECTOR;
+            lastKeyPress = ALLEGRO_KEY_1;
+        }
+    }else if(al_key_down(&keyState, ALLEGRO_KEY_2)){
+        if(lastKeyPress != ALLEGRO_KEY_2){
+            selectedBuildingId = BUILDING_MINER;
+            lastKeyPress = ALLEGRO_KEY_2;
         }
     }
 
@@ -460,14 +470,26 @@ void PlayState::draw(Engine* engine){
             }else if(i == PLAYER_WHITE){
                 al_draw_filled_rectangle(0, topGuiHeight+32*i, 32, topGuiHeight+32+32*i, PLAYER_WHITE_COLOR);
             }
-            al_draw_textf(smallFont, al_map_rgb(150, 150, 150), 16, (topGuiHeight+32*i)+(32-al_get_font_line_height(smallFont))/2, ALLEGRO_ALIGN_CENTER, playerList[i]->getPlayerName().substr(0, 3).c_str());
+            al_draw_textf(smallFont, al_map_rgb(150, 150, 150), 16, (topGuiHeight+32*i)+(32-al_get_font_line_height(smallFont))/2, ALLEGRO_ALIGN_CENTER, playerList[i]->getPlayerName().substr(0, 3).c_str());///Writing the first 3 letters of a players name on their color
             al_draw_filled_rectangle(32, topGuiHeight+32*i, 64, topGuiHeight+32+32*i, (playerList[i]->getPlayerTurn()) ? al_map_rgb(50, 200, 50) : al_map_rgb(200, 50, 50));
         }
     }
 
-    al_draw_textf(smallFont, al_map_rgb(150, 150, 150), screenWidth-60, screenHeight-23, 0, "%d", chatLogPos);
+    ///Drawing the selected building
+    al_draw_text(smallFont, al_map_rgb(150,150,150), screenWidth-200, botGuiHeight+8, NULL, "Selected building:");
+    if(selectedBuildingId == BUILDING_CONNECTOR){
+        al_draw_bitmap(connectorBuildingImage, screenWidth-40, botGuiHeight, NULL);
+    }else if(selectedBuildingId == BUILDING_MINER){
+        al_draw_bitmap(minerBuildingImage, screenWidth-40, botGuiHeight, NULL);
+    }
+    al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-200, botGuiHeight+32, NULL, "Metal cost: %d", getBuildingProperty(selectedBuildingId, BUILDING_METAL_COST));
+    al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-200, botGuiHeight+46, NULL, "Food cost: %d", getBuildingProperty(selectedBuildingId, BUILDING_FOOD_COST));
+    al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-200, botGuiHeight+60, NULL, "Oil cost: %d", getBuildingProperty(selectedBuildingId, BUILDING_OIL_COST));
+    al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-200, botGuiHeight+75, NULL, "Silver cost: %d", getBuildingProperty(selectedBuildingId, BUILDING_SILVER_COST));
+
     fpsTimeNew = al_get_time();
     fpsCounter = 1/(fpsTimeNew - fpsTimeOld);
     fpsTimeOld = fpsTimeNew;
-    al_draw_textf(defaultFont, (fpsCounter > 55) ? al_map_rgb(50, 150, 50) : (fpsCounter <= 55 && fpsCounter > 30) ? al_map_rgb(150, 150, 50) : al_map_rgb(150, 50, 50), screenWidth-95, botGuiHeight, 0, "FPS: %d", (int)round(fpsCounter));
+    al_draw_textf(defaultFont, (fpsCounter > 55) ? al_map_rgb(50, 150, 50) : (fpsCounter <= 55 && fpsCounter > 30) ? al_map_rgb(150, 150, 50) : al_map_rgb(150, 50, 50), screenWidth-90, 0, 0, "FPS: %d", (int)round(fpsCounter));
+    al_draw_textf(smallFont, al_map_rgb(150, 150, 150), screenWidth, 20, ALLEGRO_ALIGN_RIGHT, "%s", versionNumber);
 }

@@ -6,5 +6,4 @@ Medium Priority:
 	Add features that use more of the implemented functionality.
 
 Low Priority:
-	Fix disconnecting
 	Get LAN to work
