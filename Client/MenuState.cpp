@@ -31,8 +31,13 @@ void MenuState::init(){
 void MenuState::cleanup(){
     for(int i = 0; i < MAX_BUTTONS; i++)
         buttonList[i] = NULL;
-    for(int i = 0; i < MAX_INPUT_FIELDS; i++)
-        inputFieldList[i] = NULL;
+
+    for(int i = 0; i < MAX_INPUT_FIELDS; i++){
+        if(inputFieldList[i] != NULL){
+            if(inputFieldList[i]->getTypeId() < 4)
+                inputFieldList[i] = NULL;
+        }
+    }
     inGame = false;
 }
 
@@ -362,7 +367,8 @@ void MenuState::update(Engine* engine){
 
     for(int i = 0; i < MAX_INPUT_FIELDS; i++){
         if(inputFieldList[i] != NULL){
-            inputFieldList[i]->update();
+            if(inputFieldList[i]->getTypeId() < 4)
+                inputFieldList[i]->update();
         }
     }
     //Update Entities -
@@ -385,7 +391,8 @@ void MenuState::draw(Engine* engine){
 
     for(int i = 0; i < MAX_INPUT_FIELDS; i++){
         if(inputFieldList[i] != NULL){
-            inputFieldList[i]->draw();
+            if(inputFieldList[i]->getTypeId() < 4)
+                inputFieldList[i]->draw();
         }
     }
 }

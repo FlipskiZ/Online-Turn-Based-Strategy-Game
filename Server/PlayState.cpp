@@ -183,8 +183,11 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.Read(posY);
                     bitStreamIN.Read(buildingType);
 
-                    if(firstBuilding)
+                    if(firstBuilding){
                         buildingType = 0;
+                    }else if(buildingType == 0){
+                        buildingType = 1;
+                    }
 
                     int canPlaceBuildingReturn = canPlaceBuilding(buildingType, posX, posY, playerId);
                     switch(canPlaceBuildingReturn){

@@ -73,7 +73,7 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
     drawScreen = false, timerEvent = false, done = false, mouseButtonLeft = false, mouseButtonLeftClick = false, mouseButtonRight = false, mouseButtonRightClick = false, inGame = false, allegroWrite = false;
     mouseX = 0, mouseY = 0;
     lastKeyPress = 0, mouseWheel = 0;
-    selectedBuildingId = 0;
+    selectedBuildingId = BUILDING_CONNECTOR;
 
     allegroString.clear();
 

@@ -208,7 +208,7 @@ int findPlayer(RakNet::RakNetGUID senderGuid){
 }
 
 int findBuilding(int posX, int posY){
-    if(posX > 0 && posX < mapArrayWidth && posY > 0 && posY < mapArrayHeight)
+    if(posX >= 0 && posX < mapArrayWidth && posY >= 0 && posY < mapArrayHeight)
         return buildingIndex[posX][posY];
     return -1;
 }
@@ -354,7 +354,7 @@ int canPlaceBuilding(int buildingType, int posX, int posY, int playerId){
         }
     }
 
-    if(buildingType == BUILDING_MINER){
+    if(buildingType == BUILDING_MINER && allowedToPlace){
         if(mineralArray[posX][posY][0][1] > 0){
             allowedToPlace = true;
         }else{
