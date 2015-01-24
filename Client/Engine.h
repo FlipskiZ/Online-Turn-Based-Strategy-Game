@@ -88,6 +88,7 @@ enum GameMessages{
     ID_END_TURN_SYNCHRONIZE = ID_USER_PACKET_ENUM+9,
     ID_TRANSFER_MINERAL_TILE = ID_USER_PACKET_ENUM+10,
     ID_SET_BUILDING_OWNER = ID_USER_PACKET_ENUM+11,
+    ID_ATTACK_BUILDING = ID_USER_PACKET_ENUM+12,
 };
 
 enum ResourceId{
@@ -113,7 +114,8 @@ enum BuildingTypes{
     BUILDING_CAPITAL,
     BUILDING_CONNECTOR,
     BUILDING_MINER,
-    BUILDING_WEAPON,
+    BUILDING_SMALLWEAPON,
+    BUILDING_BIGWEAPON,
 };
 
 enum BuildingPropertyTypes{
@@ -130,6 +132,7 @@ void addButtonToList(Button *newButton);
 void addInputFieldToList(InputField *newInputField);
 void addParticleToList(ParticleEntity *newParticle);
 void addBuildingToList(Building *newBuilding);
+void deleteBuildingFromList(int buildingId);
 void loadMapArray();
 void saveMapArray();
 int findBuilding(int posX, int posY);
@@ -156,6 +159,8 @@ extern ALLEGRO_BITMAP *silverResourceImage;
 extern ALLEGRO_BITMAP *capitalBuildingImage;
 extern ALLEGRO_BITMAP *connectorBuildingImage;
 extern ALLEGRO_BITMAP *minerBuildingImage;
+extern ALLEGRO_BITMAP *smallWeaponBuildingImage;
+extern ALLEGRO_BITMAP *bigWeaponBuildingImage;
 
 extern ALLEGRO_KEYBOARD_STATE keyState;
 extern ALLEGRO_MOUSE_STATE mouseState;
@@ -180,7 +185,7 @@ extern float cameraPosX, cameraPosY, cameraOffsetX, cameraOffsetY, mapDisplayOff
 extern bool drawScreen, timerEvent, done, mouseButtonLeft, mouseButtonLeftClick, mouseButtonRight, mouseButtonRightClick, inGame, allegroWrite;
 extern float mouseX, mouseY;
 extern int lastKeyPress, mouseWheel, mouseWheelChange;
-extern int selectedBuildingId;
+extern int selectedBuildingId, selectedBuildingX, selectedBuildingY;
 
 extern std::string allegroString;
 

@@ -39,6 +39,8 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
     capitalBuildingImage = al_load_bitmap("graphics/capitalBuildingImage.png");
     connectorBuildingImage = al_load_bitmap("graphics/connectorBuildingImage.png");
     minerBuildingImage = al_load_bitmap("graphics/minerBuildingImage.png");
+    smallWeaponBuildingImage = al_load_bitmap("graphics/smallWeaponBuildingImage.png");
+    bigWeaponBuildingImage = al_load_bitmap("graphics/bigWeaponBuildingImage.png");
 
     event_queue = al_create_event_queue();
     timer = al_create_timer(1/FPS);
@@ -73,7 +75,7 @@ void Engine::init(const char* title, int width, int height, bool fullscreen){
     drawScreen = false, timerEvent = false, done = false, mouseButtonLeft = false, mouseButtonLeftClick = false, mouseButtonRight = false, mouseButtonRightClick = false, inGame = false, allegroWrite = false;
     mouseX = 0, mouseY = 0;
     lastKeyPress = 0, mouseWheel = 0;
-    selectedBuildingId = BUILDING_CONNECTOR;
+    selectedBuildingId = BUILDING_CONNECTOR, selectedBuildingX = -1, selectedBuildingY = -1;
 
     allegroString.clear();
 

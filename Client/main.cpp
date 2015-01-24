@@ -22,6 +22,7 @@ void addButtonToList(Button *newButton);
 void addInputFieldToList(InputField *newInputField);
 void addParticleToList(ParticleEntity *newParticle);
 void addBuildingToList(Building *newBuilding);
+void deleteBuildingFromList(int buildingId);
 void loadMapArray();
 void saveMapArray();
 int findBuilding(int posX, int posY);
@@ -49,6 +50,8 @@ ALLEGRO_BITMAP *silverResourceImage;
 ALLEGRO_BITMAP *capitalBuildingImage;
 ALLEGRO_BITMAP *connectorBuildingImage;
 ALLEGRO_BITMAP *minerBuildingImage;
+ALLEGRO_BITMAP *smallWeaponBuildingImage;
+ALLEGRO_BITMAP *bigWeaponBuildingImage;
 
 ALLEGRO_KEYBOARD_STATE keyState;
 ALLEGRO_MOUSE_STATE mouseState;
@@ -75,7 +78,7 @@ float cameraPosX, cameraPosY, cameraOffsetX, cameraOffsetY, mapDisplayOffsetX, m
 bool drawScreen, timerEvent, done, mouseButtonLeft, mouseButtonLeftClick, mouseButtonRight, mouseButtonRightClick, inGame, allegroWrite;
 float mouseX, mouseY, volumeLevel;
 int lastKeyPress, mouseWheel, mouseWheelChange;
-int selectedBuildingId;
+int selectedBuildingId, selectedBuildingX, selectedBuildingY;//selectedId for placing buildings, X and Y for selecting existing buildings on map.
 
 int mapArrayWidth, mapArrayHeight;
 
@@ -107,7 +110,8 @@ BUILDING_PROPERTIES buildingProperties[] = {
 	{0, 0, 0, 0}, // (0) BUILDING_CAPITAL
 	{10, 5, 5, 5}, // (1) BUILDING_CONNECTOR
 	{10, 10, 20, 10}, // (2) BUILDING_MINER
-	{15, 20, 30, 15}, // (3) BUILDING_WEAPON
+	{20, 25, 40, 20}, // (3) BUILDING_SMALLTWEAPON
+	{50, 75, 65, 50}, // (3) BUILDING_BIGWEAPON
 };
 //Initalization -
 
@@ -289,6 +293,13 @@ void addBuildingToList(Building *newBuilding){
     buildingIndex[newBuilding->getBuildingPosX()][newBuilding->getBuildingPosY()] = buildingList.size();
     newBuilding->setBuildingId(buildingList.size());
     buildingList.push_back(newBuilding);
+}
+
+void deleteBuildingFromList(int buildingId){
+    buildingList.erase(buildingList.begin()+buildingId);
+    for(int i = 0; i < buildingList.size(); i++){
+        buildingList[i]->setBuildingId(i);
+    }
 }
 
 void loadMapArray(){

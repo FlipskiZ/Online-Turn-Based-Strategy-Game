@@ -20,6 +20,7 @@ bool insideMap(float x, float y, float width, float height);
 void enterCommand(std::string command);
 int addPlayerToList(Player *newPlayer);
 void addBuildingToList(Building *newBuilding);
+void deleteBuildingFromList(int buildingId);
 void loadMapArray();
 void saveMapArray();
 int findPlayer(RakNet::RakNetGUID senderGuid);
@@ -72,7 +73,8 @@ BUILDING_PROPERTIES buildingProperties[] = {
 	{0, 0, 0, 0}, // (0) BUILDING_CAPITAL
 	{10, 5, 5, 5}, // (1) BUILDING_CONNECTOR
 	{10, 10, 20, 10}, // (2) BUILDING_MINER
-	{15, 20, 30, 15}, // (3) BUILDING_WEAPON
+	{20, 25, 40, 20}, // (3) BUILDING_SMALLTWEAPON
+	{50, 75, 65, 50}, // (3) BUILDING_BIGWEAPON
 };
 //Initalization -
 
@@ -143,11 +145,11 @@ bool insideMap(float x, float y, float width, float height){
 
 void enterCommand(std::string command){
     printf("Entered command: %s\n", command.c_str());
-    if(command.compare("shutdown") || command.compare("exit")){
+    if(command.compare("shutdown") == 0 || command.compare("exit") == 0){
         rakPeer->Shutdown(300);
         engine.quit();
-    }else if(command.compare("print")){
-        printf("\nX:%d Y:%d\n", buildingList[0]->getBuildingPosX(), buildingList[0]->getBuildingPosY());
+    }else if(command.substr(0, 4).compare("kick") == 0){
+
     }
 }
 
@@ -166,6 +168,13 @@ void addBuildingToList(Building *newBuilding){
     buildingIndex[newBuilding->getBuildingPosX()][newBuilding->getBuildingPosY()] = buildingList.size();
     newBuilding->setBuildingId(buildingList.size());
     buildingList.push_back(newBuilding);
+}
+
+void deleteBuildingFromList(int buildingId){
+    buildingList.erase(buildingList.begin()+buildingId);
+    for(int i = 0; i < buildingList.size(); i++){
+        buildingList[i]->setBuildingId(i);
+    }
 }
 
 void loadMapArray(){

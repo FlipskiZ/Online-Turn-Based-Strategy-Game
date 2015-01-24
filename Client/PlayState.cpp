@@ -182,6 +182,7 @@ void PlayState::update(Engine* engine){
             case ID_PLACE_BUILDING:{
                     int playerId;
                     int posX, posY, buildingType;
+                    int buildingRange, buildingHealth, buildingAttack;
 
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
 
@@ -190,11 +191,17 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.Read(posX);
                     bitStreamIN.Read(posY);
                     bitStreamIN.Read(buildingType);
+                    bitStreamIN.Read(buildingHealth);
+                    bitStreamIN.Read(buildingRange);
+                    bitStreamIN.Read(buildingAttack);
 
                     Building *newBuilding = new Building();
                     newBuilding->setBuildingPos(posX, posY);
                     newBuilding->setBuildingType(buildingType);
                     newBuilding->setBuildingOwner(playerId);
+                    newBuilding->setBuildingHealth(buildingHealth);
+                    newBuilding->setBuildingRange(buildingRange);
+                    newBuilding->setBuildingAttack(buildingAttack);
                     addBuildingToList(newBuilding);
             }break;
 
@@ -267,6 +274,18 @@ void PlayState::update(Engine* engine){
                     }
             }break;
 
+            case ID_ATTACK_BUILDING:{
+                    int posX, posY, attackDamage;
+
+                    RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
+                    bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
+                    bitStreamIN.Read(posX);
+                    bitStreamIN.Read(posY);
+                    bitStreamIN.Read(attackDamage);
+
+                    buildingList[buildingIndex[posX][posY]]->takeDamage(attackDamage);
+                }break;
+
             default:
                 printf("Message with identifier %i has arrived.\n", rakPacket->data[0]);
                 break;
@@ -286,17 +305,38 @@ void PlayState::update(Engine* engine){
         cameraPosX += cameraMoveSpeed;
     }
 
-    if(mouseButtonLeftClick){
+    if(mouseButtonLeftClick && mouseX >= leftGuiWidth && mouseX < rightGuiWidth && mouseY >= topGuiHeight && mouseY < botGuiHeight){
         int tX = floor((mouseX+cameraPosX)/tileSize), tY = floor((mouseY+cameraPosY)/tileSize);
 
-        if(insideMap(tX, tY, 0, 0)){
-            RakNet::BitStream bitStreamOUT;
-            bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
-            bitStreamOUT.Write(tX);
-            bitStreamOUT.Write(tY);
-            bitStreamOUT.Write(selectedBuildingId);
-            rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+        if(selectedBuildingX > -1 && selectedBuildingY > -1){
+            if(buildingList[buildingIndex[selectedBuildingX][selectedBuildingY]]->getBuildingOwner() != rakClientId && buildingList[buildingIndex[selectedBuildingX][selectedBuildingY]]->getBuildingRange() > 0){
+                RakNet::BitStream bitStreamOUT;
+                bitStreamOUT.Write((RakNet::MessageID)ID_ATTACK_BUILDING);
+                bitStreamOUT.Write(selectedBuildingX);
+                bitStreamOUT.Write(selectedBuildingY);
+                bitStreamOUT.Write(tX);
+                bitStreamOUT.Write(tY);
+                rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+            }
+            selectedBuildingX = -1, selectedBuildingY = -1;
+        }else{
+            if(buildingIndex[tX][tY] > -1){
+                if(buildingList[buildingIndex[tX][tY]]->getBuildingOwner() == rakClientId){
+                    selectedBuildingX = tX, selectedBuildingY = tY;
+                }
+            }else if(buildingIndex[tX][tY] == -1){
+                if(insideMap(tX, tY, 0, 0)){
+                    RakNet::BitStream bitStreamOUT;
+                    bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
+                    bitStreamOUT.Write(tX);
+                    bitStreamOUT.Write(tY);
+                    bitStreamOUT.Write(selectedBuildingId);
+                    rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+                }
+            }
         }
+    }else if(mouseButtonLeftClick){
+        selectedBuildingX = -1, selectedBuildingY = -1;
     }
 
     /*if(vertical != 0 && horizontal != 0){
@@ -346,6 +386,16 @@ void PlayState::update(Engine* engine){
         if(lastKeyPress != ALLEGRO_KEY_2){
             selectedBuildingId = BUILDING_MINER;
             lastKeyPress = ALLEGRO_KEY_2;
+        }
+    }else if(al_key_down(&keyState, ALLEGRO_KEY_3)){
+        if(lastKeyPress != ALLEGRO_KEY_3){
+            selectedBuildingId = BUILDING_SMALLWEAPON;
+            lastKeyPress = ALLEGRO_KEY_3;
+        }
+    }else if(al_key_down(&keyState, ALLEGRO_KEY_4)){
+        if(lastKeyPress != ALLEGRO_KEY_4){
+            selectedBuildingId = BUILDING_BIGWEAPON;
+            lastKeyPress = ALLEGRO_KEY_4;
         }
     }
 
@@ -405,7 +455,7 @@ void PlayState::draw(Engine* engine){
     for(int i = 0; i < buildingList.size(); i++){
         buildingList[i]->draw();
     }
-    //Draw Map-0
+    //Draw Map-
 
     //Draw Entities +
     for(int i = 0; i < MAX_PLAYERS; i++){

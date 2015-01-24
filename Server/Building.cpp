@@ -3,6 +3,7 @@
 Building::Building(){
     this->posX = 0, this->posY = 0;
     this->buildingId = 0, this->buildingType = 0, this->ownerId = 0;
+    this->buildingRange = 0, this-> buildingHealth = 0, this->buildingMaxHealth = 0, this->buildingAttack = 0;
 }
 
 void Building::setBuildingPos(int posX, int posY){
@@ -17,6 +18,30 @@ void Building::setBuildingType(int buildingType){
 }
 void Building::setBuildingOwner(int ownerId){
     this->ownerId = ownerId;
+}
+void Building::setBuildingRange(int buildingRange){
+    this->buildingRange = buildingRange;
+}
+void Building::setBuildingHealth(int buildingHealth){
+    this->buildingHealth = buildingHealth;
+    this->buildingMaxHealth = buildingHealth;
+}
+void Building::setBuildingAttack(int buildingAttack){
+    this->buildingAttack = buildingAttack;
+}
+void Building::takeDamage(int damage){
+    this->buildingHealth -= damage;
+    if(this->buildingHealth <= 0){
+        deleteBuildingFromList(this->buildingId);
+        connectBuildings();
+    }
+}
+int Building::attackBuilding(int posX, int posY){
+    if(abs(this->posX-posX) + abs(this->posY-posY) <= this->buildingRange && buildingList[buildingIndex[posX][posY]]->getBuildingOwner() != this->ownerId){
+        buildingList[buildingIndex[posX][posY]]->takeDamage(this->buildingAttack);
+        return this->buildingAttack;
+    }
+    return -1;
 }
 
 int Building::getBuildingPosX(){
@@ -33,6 +58,18 @@ int Building::getBuildingType(){
 }
 int Building::getBuildingOwner(){
     return this->ownerId;
+}
+int Building::getBuildingRange(){
+    return this->buildingRange;
+}
+int Building::getBuildingHealth(){
+    return this->buildingHealth;
+}
+int Building::getBuildingMaxHealth(){
+    return this->buildingMaxHealth;
+}
+int Building::getBuildingAttack(){
+    return this->buildingAttack;
 }
 
 void Building::checkConnectedNeighbours(){

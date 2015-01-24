@@ -51,6 +51,7 @@ enum GameMessages{
     ID_END_TURN_SYNCHRONIZE = ID_USER_PACKET_ENUM+9,
     ID_TRANSFER_MINERAL_TILE = ID_USER_PACKET_ENUM+10,
     ID_SET_BUILDING_OWNER = ID_USER_PACKET_ENUM+11,
+    ID_ATTACK_BUILDING = ID_USER_PACKET_ENUM+12,
 };
 
 enum ResourceId{
@@ -76,7 +77,8 @@ enum BuildingTypes{
     BUILDING_CAPITAL,
     BUILDING_CONNECTOR,
     BUILDING_MINER,
-    BUILDING_WEAPON,
+    BUILDING_SMALLWEAPON,
+    BUILDING_BIGWEAPON,
 };
 
 enum BuildingPropertyTypes{
@@ -92,6 +94,7 @@ bool insideMap(float x, float y, float width, float height);
 void enterCommand(std::string command);
 int addPlayerToList(Player *newPlayer);
 void addBuildingToList(Building *newBuilding);
+void deleteBuildingFromList(int buildingId);
 void loadMapArray();
 void saveMapArray();
 int findPlayer(RakNet::RakNetGUID senderGuid);

@@ -5,21 +5,31 @@ class Building{
     public:
         Building();
         void draw();
+        void drawGUI();
 
         void setBuildingPos(int posX, int posY);
         void setBuildingId(int buildingId);
         void setBuildingType(int buildingType);
         void setBuildingOwner(int ownerId);
+        void setBuildingRange(int buildingRange);
+        void setBuildingHealth(int buildingHealth);
+        void setBuildingAttack(int buildingAttack);
+        void takeDamage(int damage);
 
         int getBuildingPosX();
         int getBuildingPosY();
         int getBuildingId();
         int getBuildingType();
         int getBuildingOwner();
+        int getBuildingRange();
+        int getBuildingHealth();
+        int getBuildingMaxHealth();
+        int getBuildingAttack();
     protected:
     private:
         int posX, posY;
         int buildingId, buildingType, ownerId;
+        int buildingRange, buildingHealth, buildingMaxHealth, buildingAttack;
 };
 
 #endif // BUILDING_H
