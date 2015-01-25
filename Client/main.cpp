@@ -296,22 +296,31 @@ void addBuildingToList(Building *newBuilding){
 }
 
 void deleteBuildingFromList(int buildingId){
-    buildingList.erase(buildingList.begin()+buildingId);
+    buildingIndex[buildingList[buildingId]->getBuildingPosX()][buildingList[buildingId]->getBuildingPosY()] = -1;
     for(int i = 0; i < buildingList.size(); i++){
-        buildingList[i]->setBuildingId(i);
+        if(i < buildingId){
+            //Nothing
+        }else if(i == buildingId){
+            buildingList.erase(buildingList.begin()+buildingId);
+            i--;
+            buildingId--;
+        }else if(i > buildingId){
+            buildingList[i]->setBuildingId(i);
+            buildingIndex[buildingList[i]->getBuildingPosX()][buildingList[i]->getBuildingPosY()] = i;
+        }
     }
 }
 
 void loadMapArray(){
-    /*for(int y = 0; y < mapArrayHeight; y++){
+    for(int y = 0; y < mapArrayHeight; y++){
         for(int x = 0; x < mapArrayWidth; x++){
-            mapArray[x][y] = rand()%2;
+            mapArray[x][y] = 0;
             mapArrayRotation[x][y] = 0;
-            mineralArray[x][y][0][0] = rand()%4;
-            mineralArray[x][y][0][1] = 1;
+            mineralArray[x][y][0][0] = 0;
+            mineralArray[x][y][0][1] = 0;
             buildingIndex[x][y] = -1;
         }
-    }*/
+    }
 }
 
 void saveMapArray(){

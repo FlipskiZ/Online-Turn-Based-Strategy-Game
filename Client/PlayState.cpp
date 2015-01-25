@@ -283,7 +283,23 @@ void PlayState::update(Engine* engine){
                     bitStreamIN.Read(posY);
                     bitStreamIN.Read(attackDamage);
 
-                    buildingList[buildingIndex[posX][posY]]->takeDamage(attackDamage);
+                    if(buildingIndex[posX][posY] > -1){
+                        buildingList[buildingIndex[posX][posY]]->takeDamage(attackDamage);
+                    }
+                }break;
+
+            case ID_SET_BUILDING_STATS:{
+                    int posX, posY, AP;
+
+                    RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
+                    bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
+                    bitStreamIN.Read(posX);
+                    bitStreamIN.Read(posY);
+                    bitStreamIN.Read(AP);
+
+                    if(buildingIndex[posX][posY] > -1){
+                        buildingList[buildingIndex[posX][posY]]->setBuildingAP(AP);
+                    }
                 }break;
 
             default:
@@ -309,7 +325,7 @@ void PlayState::update(Engine* engine){
         int tX = floor((mouseX+cameraPosX)/tileSize), tY = floor((mouseY+cameraPosY)/tileSize);
 
         if(selectedBuildingX > -1 && selectedBuildingY > -1){
-            if(buildingList[buildingIndex[selectedBuildingX][selectedBuildingY]]->getBuildingOwner() != rakClientId && buildingList[buildingIndex[selectedBuildingX][selectedBuildingY]]->getBuildingRange() > 0){
+            if(buildingList[buildingIndex[tX][tY]]->getBuildingOwner() != rakClientId && buildingList[buildingIndex[selectedBuildingX][selectedBuildingY]]->getBuildingRange() > 0){
                 RakNet::BitStream bitStreamOUT;
                 bitStreamOUT.Write((RakNet::MessageID)ID_ATTACK_BUILDING);
                 bitStreamOUT.Write(selectedBuildingX);
@@ -319,20 +335,19 @@ void PlayState::update(Engine* engine){
                 rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
             }
             selectedBuildingX = -1, selectedBuildingY = -1;
-        }else{
-            if(buildingIndex[tX][tY] > -1){
-                if(buildingList[buildingIndex[tX][tY]]->getBuildingOwner() == rakClientId){
-                    selectedBuildingX = tX, selectedBuildingY = tY;
-                }
-            }else if(buildingIndex[tX][tY] == -1){
-                if(insideMap(tX, tY, 0, 0)){
-                    RakNet::BitStream bitStreamOUT;
-                    bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
-                    bitStreamOUT.Write(tX);
-                    bitStreamOUT.Write(tY);
-                    bitStreamOUT.Write(selectedBuildingId);
-                    rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-                }
+        }
+        if(buildingIndex[tX][tY] > -1){
+            if(buildingList[buildingIndex[tX][tY]]->getBuildingOwner() == rakClientId){
+                selectedBuildingX = tX, selectedBuildingY = tY;
+            }
+        }else if(buildingIndex[tX][tY] == -1){
+            if(insideMap(tX, tY, 0, 0)){
+                RakNet::BitStream bitStreamOUT;
+                bitStreamOUT.Write((RakNet::MessageID)ID_PLACE_BUILDING);
+                bitStreamOUT.Write(tX);
+                bitStreamOUT.Write(tY);
+                bitStreamOUT.Write(selectedBuildingId);
+                rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
             }
         }
     }else if(mouseButtonLeftClick){
@@ -531,11 +546,19 @@ void PlayState::draw(Engine* engine){
         al_draw_bitmap(connectorBuildingImage, screenWidth-40, botGuiHeight, NULL);
     }else if(selectedBuildingId == BUILDING_MINER){
         al_draw_bitmap(minerBuildingImage, screenWidth-40, botGuiHeight, NULL);
+    }else if(selectedBuildingId == BUILDING_SMALLWEAPON){
+        al_draw_bitmap(smallWeaponBuildingImage, screenWidth-40, botGuiHeight, NULL);
+    }else if(selectedBuildingId == BUILDING_BIGWEAPON){
+        al_draw_bitmap(bigWeaponBuildingImage, screenWidth-40, botGuiHeight, NULL);
     }
     al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-200, botGuiHeight+32, NULL, "Metal cost: %d", getBuildingProperty(selectedBuildingId, BUILDING_METAL_COST));
     al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-200, botGuiHeight+46, NULL, "Food cost: %d", getBuildingProperty(selectedBuildingId, BUILDING_FOOD_COST));
     al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-200, botGuiHeight+60, NULL, "Oil cost: %d", getBuildingProperty(selectedBuildingId, BUILDING_OIL_COST));
     al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-200, botGuiHeight+75, NULL, "Silver cost: %d", getBuildingProperty(selectedBuildingId, BUILDING_SILVER_COST));
+
+    for(int i = 0; i < buildingList.size(); i++){
+        buildingList[i]->drawGUI();
+    }
 
     fpsTimeNew = al_get_time();
     fpsCounter = 1/(fpsTimeNew - fpsTimeOld);

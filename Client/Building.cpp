@@ -3,7 +3,7 @@
 Building::Building(){
     this->posX = 0, this->posY = 0;
     this->buildingId = 0, this->buildingType = 0, this->ownerId = 0;
-    this->buildingRange = 0, this->buildingHealth = 0, this->buildingMaxHealth = 0, this->buildingAttack = 0;
+    this->buildingRange = 0, this->buildingHealth = 0, this->buildingMaxHealth = 0, this->buildingAttack = 0, buildingAP = 0;
 }
 
 void Building::setBuildingPos(int posX, int posY){
@@ -28,6 +28,9 @@ void Building::setBuildingHealth(int buildingHealth){
 }
 void Building::setBuildingAttack(int buildingAttack){
     this->buildingAttack = buildingAttack;
+}
+void Building::setBuildingAP(int buildingAP){
+    this->buildingAP = buildingAP;
 }
 void Building::takeDamage(int damage){
     this->buildingHealth -= damage;
@@ -62,6 +65,9 @@ int Building::getBuildingMaxHealth(){
 }
 int Building::getBuildingAttack(){
     return this->buildingAttack;
+}
+int Building::getBuildingAP(){
+    return this->buildingAP;
 }
 
 void Building::draw(){
@@ -170,13 +176,26 @@ void Building::draw(){
     }
 }
 void Building::drawGUI(){
-    if(this->buildingRange > 0){
-        for(int x = -this->buildingRange; x < this->buildingRange; x++){
-            for(int y = -this->buildingRange; y < this->buildingRange; y++){
-                if(abs(x)+abs(y) <= this->buildingRange){
-                    al_draw_filled_rectangle((this->posX+x)*tileSize, (this->posY+y)*tileSize, (this->posX+x+1)*tileSize, (this->posY+y+1)*tileSize, al_map_rgba(127, 0, 0, 20));
+    if(selectedBuildingX > -1 && selectedBuildingY > -1){
+        if(buildingIndex[selectedBuildingX][selectedBuildingY] == this->buildingId){
+            if(this->buildingRange > 0){
+                for(int x = -this->buildingRange; x <= this->buildingRange; x++){
+                    for(int y = -this->buildingRange; y <= this->buildingRange; y++){
+                        if(abs(x)+abs(y) <= this->buildingRange){
+                            al_draw_filled_rectangle((this->posX+x)*tileSize+cameraOffsetX, (this->posY+y)*tileSize+cameraOffsetY, (this->posX+x+1)*tileSize+cameraOffsetX, (this->posY+y+1)*tileSize+cameraOffsetY, al_map_rgba(127, 0, 0, 20));
+                        }
+                    }
                 }
             }
+            al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-500, botGuiHeight, NULL, "Selected Building X: %d - Y: %d", this->posX, this->posY);
+            al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-500, botGuiHeight+15, NULL, "Remaining building AP: %d", this->buildingAP);
+            al_draw_textf(smallFont, al_map_rgb(150,150,150), screenWidth-500, botGuiHeight+30, NULL, "Building Health: %d/%d", this->buildingHealth, this->buildingMaxHealth);
         }
+    }
+
+    if(this->buildingHealth < this->buildingMaxHealth){
+        al_draw_rectangle(this->posX*tileSize+0.5+cameraOffsetX, this->posY*tileSize+0.5+cameraOffsetY, this->posX*tileSize+tileSize-0.5+cameraOffsetX, this->posY*tileSize+3.5+cameraOffsetY, al_map_rgb(100,100,100), 1);
+
+        al_draw_filled_rectangle(this->posX*tileSize+1+cameraOffsetX, this->posY*tileSize+1+cameraOffsetY, 1+this->posX*tileSize+tileSize/this->buildingMaxHealth*this->buildingHealth+cameraOffsetX, this->posY*tileSize+3+cameraOffsetY, al_map_rgb(200,0,0));
     }
 }

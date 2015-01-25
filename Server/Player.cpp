@@ -7,6 +7,7 @@ Player::Player(){
     this->playerName.clear();
     this->endTurn = false, this->firstBuilding = false;
     this->metalResource = 0, this->foodResource = 0, this->oilResource = 0, this->silverResource = 0;
+    this->playerLost = false;
 }
 
 void Player::setPlayerId(int id){
@@ -34,6 +35,13 @@ void Player::setPlayerResources(int metalResource, int foodResource, int oilReso
     this->foodResource = foodResource;
     this->oilResource = oilResource;
     this->silverResource = silverResource;
+}
+
+void Player::setPlayerLost(bool playerLost){
+    this->playerLost = playerLost;
+    if(playerLost){
+        this->endTurn = true;
+    }
 }
 
 void Player::changePlayerResource(int resourceEnum, int amount){
@@ -64,6 +72,10 @@ bool Player::getPlayerFirst(){
     return this->firstBuilding;
 }
 
+bool Player::getPlayerLost(){
+    return this->playerLost;
+}
+
 int Player::getPlayerResource(int resourceEnum){
     if(resourceEnum == RESOURCE_METAL){
         return this->metalResource;
@@ -80,7 +92,8 @@ void Player::endPlayerTurn(){
     int posX, posY;
     bool minedMinerals = false;
 
-    this->endTurn = false;
+    if(!this->playerLost)
+        this->endTurn = false;
 
     for(int i = 0; i < buildingList.size(); i++){
         if(buildingList[i]->getBuildingOwner() == this->playerId){

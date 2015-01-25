@@ -14,6 +14,7 @@ class Building{
         void setBuildingRange(int buildingRange);
         void setBuildingHealth(int buildingHealth);
         void setBuildingAttack(int buildingAttack);
+        void setBuildingAP(int buildingAP);
         void takeDamage(int damage);
 
         int getBuildingPosX();
@@ -25,11 +26,12 @@ class Building{
         int getBuildingHealth();
         int getBuildingMaxHealth();
         int getBuildingAttack();
+        int getBuildingAP();
     protected:
     private:
         int posX, posY;
         int buildingId, buildingType, ownerId;
-        int buildingRange, buildingHealth, buildingMaxHealth, buildingAttack;
+        int buildingRange, buildingHealth, buildingMaxHealth, buildingAttack, buildingAP;
 };
 
 #endif // BUILDING_H

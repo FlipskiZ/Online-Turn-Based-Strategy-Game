@@ -12,6 +12,7 @@ class Player{
         void setPlayerTurn(bool endTurn);
         void setPlayerFirst(bool first);
         void setPlayerResources(int metalResource, int foodResource, int oilResource, int silverResource);
+        void setPlayerLost(bool playerLost);
         void changePlayerResource(int resourceEnum, int amount);
 
         int getPlayerId();
@@ -19,12 +20,13 @@ class Player{
         RakNet::RakNetGUID playerGuid;
         bool getPlayerTurn();
         bool getPlayerFirst();
+        bool getPlayerLost();
         int getPlayerResource(int resourceEnum);
     protected:
     private:
         int playerId;
         std::string playerName;
-        bool endTurn, firstBuilding;
+        bool endTurn, firstBuilding, playerLost;
 
         int metalResource, foodResource, oilResource, silverResource;
 };

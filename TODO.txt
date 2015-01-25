@@ -1,7 +1,5 @@
 High Priority:
 	Eventual bugs, glitches and crashes.
-	Adding the graphics for the weapon buildings
-	Testing the game
 	
 Medium Priority:
 	Develop more UI elements to show more information to the player

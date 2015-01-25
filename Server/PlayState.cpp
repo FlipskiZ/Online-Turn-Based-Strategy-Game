@@ -186,6 +186,8 @@ void PlayState::update(Engine* engine){
 
                     if(firstBuilding){
                         buildingType = BUILDING_CAPITAL;
+                        buildingRange = 3;
+                        buildingAttack = 2;
                     }else if(buildingType == BUILDING_CAPITAL){
                         buildingType = BUILDING_CONNECTOR;
                     }else if(buildingType == BUILDING_SMALLWEAPON){
@@ -306,15 +308,23 @@ void PlayState::update(Engine* engine){
                                 bitStreamOUT.Write(playerList[i]->getPlayerResource(RESOURCE_OIL));
                                 bitStreamOUT.Write(playerList[i]->getPlayerResource(RESOURCE_SILVER));
                                 rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, rakPeer->GetSystemAddressFromGuid(playerList[i]->playerGuid), false);
-                                printf("NEXT TURN\n");
                             }
                         }
+                        for(int i = 0; i < buildingList.size(); i++){
+                            bitStreamOUT.Reset();
+                            bitStreamOUT.Write((RakNet::MessageID)ID_SET_BUILDING_STATS);
+                            bitStreamOUT.Write(buildingList[i]->getBuildingPosX());
+                            bitStreamOUT.Write(buildingList[i]->getBuildingPosY());
+                            bitStreamOUT.Write(buildingList[i]->getBuildingAP());
+                            rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+                        }
+                        printf("NEXT TURN\n");
                     }
                 }break;
 
             case ID_ATTACK_BUILDING:{
                     int playerId = findPlayer(rakPacket->guid);
-                    int attackerX, attackerY, targetX, targetY, attackDamage;
+                    int attackerX, attackerY, targetX, targetY, attackDamage, AP;
 
                     RakNet::BitStream bitStreamIN(rakPacket->data, rakPacket->length, false);
                     bitStreamIN.IgnoreBytes(sizeof(RakNet::MessageID));
@@ -326,14 +336,24 @@ void PlayState::update(Engine* engine){
                     if(insideMap(targetX, targetY, tileSize, tileSize) && insideMap(attackerX, attackerY, tileSize, tileSize)){
                         if(buildingIndex[targetX][targetY] >= 0 && buildingIndex[attackerX][attackerY] >= 0){
                             attackDamage = buildingList[buildingIndex[attackerX][attackerY]]->attackBuilding(targetX, targetY);//Function to attack a building, returns the attack value dealt to the building target
+                            RakNet::BitStream bitStreamOUT;
                             if(attackDamage > 0){
-                                RakNet::BitStream bitStreamOUT;
                                 bitStreamOUT.Write((RakNet::MessageID)ID_ATTACK_BUILDING);
-                                bitStreamIN.Write(targetX);
-                                bitStreamIN.Write(targetY);
-                                bitStreamIN.Write(attackDamage);
+                                bitStreamOUT.Write(targetX);
+                                bitStreamOUT.Write(targetY);
+                                bitStreamOUT.Write(attackDamage);
                                 rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
-                                printf("%s attacked building at X: %d - Y: %d for %d damage from X: %d - Y: %d\n", playerList[playerId]->getPlayerName().c_str(), targetX, targetY, attackDamage, attackerX, attackerY);
+
+                                AP = buildingList[buildingIndex[attackerX][attackerY]]->getBuildingAP();
+                                bitStreamOUT.Reset();
+                                bitStreamOUT.Write((RakNet::MessageID)ID_SET_BUILDING_STATS);
+                                bitStreamOUT.Write(attackerX);
+                                bitStreamOUT.Write(attackerY);
+                                bitStreamOUT.Write(AP);
+                                rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+                                printf("%s attacked building at X: %d - Y: %d for %d damage from X: %d - Y: %d - %d AP\n", playerList[playerId]->getPlayerName().c_str(), targetX, targetY, attackDamage, attackerX, attackerY, AP);
+                            }else{
+                                printf("%s tried to attack building at X: %d - Y: %d from X: %d - Y: %d\n", playerList[playerId]->getPlayerName().c_str(), targetX, targetY, attackerX, attackerY);
                             }
                         }
                     }

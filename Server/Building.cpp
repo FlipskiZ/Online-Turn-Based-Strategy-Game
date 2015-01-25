@@ -3,7 +3,7 @@
 Building::Building(){
     this->posX = 0, this->posY = 0;
     this->buildingId = 0, this->buildingType = 0, this->ownerId = 0;
-    this->buildingRange = 0, this-> buildingHealth = 0, this->buildingMaxHealth = 0, this->buildingAttack = 0;
+    this->buildingRange = 0, this-> buildingHealth = 0, this->buildingMaxHealth = 0, this->buildingAttack = 0, this->buildingAP = 0;
 }
 
 void Building::setBuildingPos(int posX, int posY){
@@ -29,16 +29,24 @@ void Building::setBuildingHealth(int buildingHealth){
 void Building::setBuildingAttack(int buildingAttack){
     this->buildingAttack = buildingAttack;
 }
+void Building::setBuildingAP(int buildingAP){
+    this->buildingAP = buildingAP;
+}
 void Building::takeDamage(int damage){
     this->buildingHealth -= damage;
     if(this->buildingHealth <= 0){
         deleteBuildingFromList(this->buildingId);
         connectBuildings();
+        if(this->buildingType == BUILDING_CAPITAL){
+            playerList[this->ownerId]->setPlayerLost(true);
+        }
+        printf("Destroyed building at X: %d - Y: %d\n", this->posX, this->posY);
     }
 }
 int Building::attackBuilding(int posX, int posY){
-    if(abs(this->posX-posX) + abs(this->posY-posY) <= this->buildingRange && buildingList[buildingIndex[posX][posY]]->getBuildingOwner() != this->ownerId){
+    if(abs(this->posX-posX) + abs(this->posY-posY) <= this->buildingRange && buildingList[buildingIndex[posX][posY]]->getBuildingOwner() != this->ownerId && this->buildingAP > 0){
         buildingList[buildingIndex[posX][posY]]->takeDamage(this->buildingAttack);
+        this->buildingAP -= 1;
         return this->buildingAttack;
     }
     return -1;
@@ -70,6 +78,9 @@ int Building::getBuildingMaxHealth(){
 }
 int Building::getBuildingAttack(){
     return this->buildingAttack;
+}
+int Building::getBuildingAP(){
+    return this->buildingAP;
 }
 
 void Building::checkConnectedNeighbours(){

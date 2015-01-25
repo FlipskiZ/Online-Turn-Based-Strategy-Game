@@ -166,14 +166,26 @@ int addPlayerToList(Player *newPlayer){
 
 void addBuildingToList(Building *newBuilding){
     buildingIndex[newBuilding->getBuildingPosX()][newBuilding->getBuildingPosY()] = buildingList.size();
+    mapArrayOwner[newBuilding->getBuildingPosX()][newBuilding->getBuildingPosY()] = newBuilding->getBuildingOwner();
     newBuilding->setBuildingId(buildingList.size());
     buildingList.push_back(newBuilding);
 }
 
 void deleteBuildingFromList(int buildingId){
-    buildingList.erase(buildingList.begin()+buildingId);
+    buildingIndex[buildingList[buildingId]->getBuildingPosX()][buildingList[buildingId]->getBuildingPosY()] = -1;
+    mapArrayOwner[buildingList[buildingId]->getBuildingPosX()][buildingList[buildingId]->getBuildingPosY()] = -1;
     for(int i = 0; i < buildingList.size(); i++){
-        buildingList[i]->setBuildingId(i);
+        if(i < buildingId){
+            //Nothing
+        }else if(i == buildingId){
+            buildingList.erase(buildingList.begin()+buildingId);
+            i--;
+            buildingId--;
+        }else if(i > buildingId){
+            buildingList[i]->setBuildingId(i);
+            buildingIndex[buildingList[i]->getBuildingPosX()][buildingList[i]->getBuildingPosY()] = i;
+            printf("BuildingIndex Id %d - X: %d - Y: %d - Owner %d\n", i, buildingList[i]->getBuildingPosX(), buildingList[i]->getBuildingPosY(), buildingList[i]->getBuildingOwner());
+        }
     }
 }
 
@@ -231,6 +243,10 @@ bool endTurn(){
         }
     }
 
+    for(int i = 0; i < buildingList.size(); i++){
+        buildingList[i]->setBuildingAP(1);
+    }
+
     connectBuildings();
 
     for(int i = 0; i < maxPlayers; i++){
@@ -250,12 +266,12 @@ void connectBuildings(){
         }
     }
     for(int i = 0; i < buildingList.size(); i++){
-        if(buildingList[i]->getBuildingId() != 0){
+        if(buildingList[i]->getBuildingType() != BUILDING_CAPITAL){
             buildingList[i]->setBuildingOwner(-1);
         }
     }
     for(int i = 0; i < buildingList.size(); i++){
-        if(buildingList[i]->getBuildingId() == 0){
+        if(buildingList[i]->getBuildingType() == BUILDING_CAPITAL){
             buildingList[i]->checkConnectedNeighbours();
         }
     }
@@ -270,6 +286,7 @@ void connectBuildings(){
                     bitStreamOUT.Write(x);
                     bitStreamOUT.Write(y);
                     rakPeer->Send(&bitStreamOUT, HIGH_PRIORITY, RELIABLE, 0, RakNet::UNASSIGNED_RAKNET_GUID, true);
+                    printf("Sent change\n");
                 }
             }
         }
@@ -344,19 +361,24 @@ int canPlaceBuilding(int buildingType, int posX, int posY, int playerId){
         allowedToPlace = false;
 
     if(allowedToPlace){
+        printf("Left %d - Right %d - Top %d - Bot %d\n", findBuilding(posX-1, posY), findBuilding(posX+1, posY), findBuilding(posX, posY-1), findBuilding(posX-1, posY+1));
         if(findBuilding(posX-1, posY) > -1){
+            printf("Building Owner %d\n", buildingList[findBuilding(posX-1, posY)]->getBuildingOwner());
             if(buildingList[findBuilding(posX-1, posY)]->getBuildingOwner() == -1){
                 besideUnowned = true;
             }
         }else if(findBuilding(posX+1, posY) > -1){
+            printf("Building Owner %d\n", buildingList[findBuilding(posX+1, posY)]->getBuildingOwner());
             if(buildingList[findBuilding(posX+1, posY)]->getBuildingOwner() == -1){
                 besideUnowned = true;
             }
         }else if(findBuilding(posX, posY-1) > -1){
+            printf("Building Owner %d\n", buildingList[findBuilding(posX, posY-1)]->getBuildingOwner());
             if(buildingList[findBuilding(posX, posY-1)]->getBuildingOwner() == -1){
                 besideUnowned = true;
             }
         }else if(findBuilding(posX, posY+1) > -1){
+            printf("Building Owner %d\n", buildingList[findBuilding(posX, posY+1)]->getBuildingOwner());
             if(buildingList[findBuilding(posX, posY+1)]->getBuildingOwner() == -1){
                 besideUnowned = true;
             }
